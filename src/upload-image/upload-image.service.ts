@@ -42,7 +42,11 @@ export class UploadImageService {
       throw new BadRequestException('File không được vượt quá 10MB');
     }
 
-    return new Promise((resolve, reject) => {
+    if (!file.buffer) {
+      throw new BadRequestException('File buffer is missing');
+    }
+
+    return new Promise<UploadResponseDto>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: folder,
@@ -52,7 +56,17 @@ export class UploadImageService {
             fetch_format: 'auto',
           },
         },
-        (error, result) => {
+        (
+          error: Error | undefined,
+          result: {
+            secure_url: string;
+            public_id: string;
+            width: number;
+            height: number;
+            format: string;
+            bytes: number;
+          } | undefined,
+        ) => {
           if (error) {
             reject(new BadRequestException(`Upload failed: ${error.message}`));
           } else if (!result) {
@@ -85,15 +99,19 @@ export class UploadImageService {
     try {
       const result = await cloudinary.uploader.destroy(publicId, {
         resource_type: 'image',
-      });
+      }) as { result: string };
 
       if (result.result === 'not found') {
         throw new BadRequestException('Ảnh không tồn tại');
       }
 
       return { result: result.result };
-    } catch (error) {
-      throw new BadRequestException(`Xóa ảnh thất bại: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage =
+        error && typeof error === 'object' && 'message' in error && typeof error.message === 'string'
+          ? error.message
+          : 'Unknown error';
+      throw new BadRequestException(`Xóa ảnh thất bại: ${errorMessage}`);
     }
   }
 

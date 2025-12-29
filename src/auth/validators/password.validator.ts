@@ -3,7 +3,6 @@ import {
   ValidationOptions,
   ValidatorConstraint,
   ValidatorConstraintInterface,
-  ValidationArguments,
 } from 'class-validator';
 
 @ValidatorConstraint({ name: 'isStrongPassword', async: false })
