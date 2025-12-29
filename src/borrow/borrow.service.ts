@@ -4,6 +4,7 @@ import {
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBorrowDto } from './dto/create-borrow.dto';
 import { BorrowsQueryDto } from './dto/borrows-query.dto';
@@ -127,7 +128,7 @@ export class BorrowService {
     const limit = query.limit || 10;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Prisma.BorrowWhereInput = {};
     if (userId) {
       where.userId = userId;
     }

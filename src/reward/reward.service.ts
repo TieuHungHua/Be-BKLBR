@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRewardDto } from './dto/create-reward.dto';
 import { UpdateRewardDto } from './dto/update-reward.dto';
@@ -29,7 +30,7 @@ export class RewardService {
     const limit = query.limit || 10;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Prisma.RewardWhereInput = {};
     if (query.active !== undefined) {
       where.active = query.active;
     }

@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
@@ -29,7 +30,7 @@ export class BookService {
     const limit = query.limit || 10;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Prisma.BookWhereInput = {};
 
     if (query.search) {
       where.title = {
