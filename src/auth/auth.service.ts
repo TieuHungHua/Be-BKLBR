@@ -6,9 +6,10 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
+import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
+import { RegisterDto, RegisterRole } from './dto/register.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 
 @Injectable()
@@ -16,7 +17,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   async register(registerDto: RegisterDto): Promise<AuthResponseDto> {
     // Kiểm tra password và confirmPassword khớp nhau
@@ -25,7 +26,7 @@ export class AuthService {
     }
 
     // Kiểm tra nếu là student thì phải có studentId
-    if (registerDto.role === 'student' && !registerDto.studentId) {
+    if (registerDto.role === RegisterRole.student && !registerDto.studentId) {
       throw new BadRequestException('Mã sinh viên là bắt buộc cho tài khoản sinh viên');
     }
 
@@ -63,7 +64,7 @@ export class AuthService {
         email: registerDto.email,
         phone: registerDto.phone,
         password: hashedPassword,
-        role: registerDto.role,
+        role: registerDto.role as UserRole, // Convert RegisterRole to UserRole
         studentId: registerDto.studentId || null,
         displayName: registerDto.username, // Mặc định displayName = username
       },
@@ -132,10 +133,19 @@ export class AuthService {
           role: user.role,
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Xử lý lỗi kết nối database
-      if (error.code === 'P1001' || error.message?.includes("Can't reach database")) {
-        console.error('❌ Database connection error:', error.message);
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === 'P1001'
+      ) {
+        const errorMessage =
+          'message' in error && typeof error.message === 'string'
+            ? error.message
+            : 'Unknown error';
+        console.error('❌ Database connection error:', errorMessage);
         throw new BadRequestException(
           'Không thể kết nối đến database. Vui lòng thử lại sau hoặc liên hệ quản trị viên.',
         );
@@ -164,7 +174,11 @@ export class AuthService {
   async refreshToken(refreshToken: string): Promise<{ access_token: string; refresh_token: string }> {
     try {
       // Verify refresh token
-      const payload = await this.jwtService.verifyAsync(refreshToken);
+      const payload = await this.jwtService.verifyAsync<{ sub: string; username: string; role: UserRole }>(refreshToken);
+
+      if (!payload || !payload.sub) {
+        throw new UnauthorizedException('Refresh token không hợp lệ');
+      }
 
       // Kiểm tra user còn tồn tại không
       const user = await this.prisma.user.findUnique({
@@ -188,7 +202,10 @@ export class AuthService {
         access_token,
         refresh_token: new_refresh_token,
       };
-    } catch (error) {
+    } catch (error: unknown) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
       throw new UnauthorizedException('Refresh token không hợp lệ hoặc đã hết hạn');
     }
   }
