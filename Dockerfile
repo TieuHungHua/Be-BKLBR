@@ -16,18 +16,14 @@ RUN npx prisma generate
 # Copy source code
 COPY . .
 
-# Build application with verbose output
-RUN echo "Starting build process..." && \
-    npm run build 2>&1 | tee /tmp/build.log && \
-    echo "Build command completed. Exit code: $?" && \
-    echo "Checking if dist directory exists..." && \
-    (test -d /app/dist && echo "✓ dist directory exists" || (echo "✗ dist directory NOT found!" && exit 1)) && \
-    echo "Listing dist directory contents:" && \
-    ls -la /app/dist/ || (echo "✗ Cannot list dist directory!" && exit 1) && \
-    echo "Checking for main.js..." && \
-    (test -f /app/dist/main.js && echo "✓ main.js found at dist/main.js!" || \
-     (echo "✗ main.js NOT found at dist/main.js!" && echo "Files in dist:" && find /app/dist -name "main.js" 2>/dev/null || ls -la /app/dist/ && echo "Build log:" && cat /tmp/build.log && exit 1)) && \
-    echo "Build verification successful!"
+# Build application
+RUN npm run build || (echo "Build failed!" && exit 1)
+
+# Verify build output exists
+RUN echo "Checking build output..." && \
+    ls -la /app/dist/ && \
+    test -f /app/dist/main.js || (echo "ERROR: main.js not found in dist!" && ls -la /app/dist/ && exit 1) && \
+    echo "Build successful!"
 
 # Production stage
 FROM node:20-alpine AS production
@@ -53,7 +49,7 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 # Verify dist folder was copied
 RUN echo "Verifying copied files..." && \
     ls -la /app/dist/ && \
-    test -f /app/dist/main.js || (echo "ERROR: main.js not found at dist/main.js after copy!" && exit 1) && \
+    test -f /app/dist/main.js || (echo "ERROR: main.js not found after copy!" && exit 1) && \
     echo "Files verified successfully!"
 
 # Expose port
