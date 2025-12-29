@@ -10,16 +10,19 @@ export interface CurrentUserType {
   classMajor: string | null;
 }
 
+interface RequestWithUser {
+  user?: CurrentUserType;
+}
+
 export const CurrentUser = createParamDecorator(
   (data: unknown, ctx: ExecutionContext): CurrentUserType => {
-    const request = ctx.switchToHttp().getRequest();
-    const user = request.user as CurrentUserType | undefined;
+    const request = ctx.switchToHttp().getRequest<RequestWithUser>();
     
-    if (!user) {
+    if (!request.user) {
       throw new Error('User not found in request. Make sure JwtAuthGuard is applied.');
     }
     
-    return user;
+    return request.user;
   },
 );
 
