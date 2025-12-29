@@ -6,6 +6,10 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UploadImageModule } from './upload-image/upload-image.module';
 import { CommentModule } from './comment/comment.module';
+import { BookModule } from './book/book.module';
+import { BorrowModule } from './borrow/borrow.module';
+import { RewardModule } from './reward/reward.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -17,8 +21,12 @@ import { CommentModule } from './comment/comment.module';
     AuthModule,
     UploadImageModule,
     CommentModule,
+    BookModule,
+    BorrowModule,
+    RewardModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

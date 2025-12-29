@@ -52,6 +52,10 @@ async function bootstrap() {
     .addTag('auth', 'Authentication endpoints')
     .addTag('upload', 'File upload endpoints')
     .addTag('comments', 'Book comments endpoints')
+    .addTag('books', 'Book management endpoints')
+    .addTag('borrows', 'Borrow management endpoints')
+    .addTag('rewards', 'Reward management endpoints')
+    .addTag('users', 'User management endpoints')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
