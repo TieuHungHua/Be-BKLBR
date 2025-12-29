@@ -1,0 +1,204 @@
+================================================================================
+                    HƯỚNG DẪN CI/CD SETUP
+================================================================================
+
+📌 TỔNG QUAN:
+   Đã tạo CI/CD pipeline với GitHub Actions để tự động test, build và deploy
+   backend NestJS khi có code mới được push lên repository.
+
+================================================================================
+📁 CÁC FILE ĐÃ TẠO
+================================================================================
+
+1. .github/workflows/ci.yml
+   - GitHub Actions workflow
+   - Tự động chạy test và build khi push/PR
+   - Tự động deploy khi merge vào main/master
+
+2. Dockerfile
+   - Multi-stage build để tối ưu image size
+   - Production-ready với health check
+
+3. docker-compose.yml
+   - Để chạy local với Docker
+   - Cấu hình environment variables
+
+4. .dockerignore
+   - Loại trừ các file không cần thiết khỏi Docker image
+
+5. .gitignore
+   - Loại trừ các file không cần commit
+
+================================================================================
+🔧 SETUP GITHUB ACTIONS
+================================================================================
+
+BƯỚC 1: Tạo GitHub Repository
+   1. Tạo repository mới trên GitHub
+   2. Push code lên repository
+
+BƯỚC 2: Cấu hình Secrets
+   Vào Settings > Secrets and variables > Actions
+   Thêm các secrets sau:
+   
+   - DATABASE_URL: Connection string của database production
+   - JWT_SECRET: Secret key cho JWT
+   - CLOUDINARY_CLOUD_NAME: Cloudinary cloud name
+   - CLOUDINARY_API_KEY: Cloudinary API key
+   - CLOUDINARY_API_SECRET: Cloudinary API secret
+
+BƯỚC 3: Push code
+   Khi push code lên branch main/master, workflow sẽ tự động chạy:
+   - Test
+   - Build
+   - Deploy (nếu cần)
+
+================================================================================
+🐳 DOCKER SETUP
+================================================================================
+
+1. BUILD DOCKER IMAGE:
+   cd backend
+   docker build -t backend-library .
+
+2. RUN VỚI DOCKER:
+   docker run -p 3000:3000 \
+     -e DATABASE_URL="your-database-url" \
+     -e JWT_SECRET="your-jwt-secret" \
+     backend-library
+
+3. RUN VỚI DOCKER COMPOSE:
+   cd backend
+   docker-compose up -d
+
+4. XEM LOGS:
+   docker-compose logs -f
+
+5. STOP:
+   docker-compose down
+
+================================================================================
+🚀 DEPLOY OPTIONS
+================================================================================
+
+1. RAILWAY:
+   - Kết nối GitHub repo
+   - Railway tự động detect Dockerfile
+   - Tự động deploy khi có code mới
+
+2. RENDER:
+   - Kết nối GitHub repo
+   - Chọn Dockerfile
+   - Cấu hình environment variables
+   - Auto-deploy enabled
+
+3. VPS (DigitalOcean, AWS EC2, etc.):
+   - SSH vào server
+   - Clone repo
+   - Chạy docker-compose up -d
+   - Hoặc setup PM2 với npm run start:prod
+
+4. HEROKU:
+   - Kết nối GitHub repo
+   - Sử dụng Heroku Container Registry
+   - Deploy Docker image
+
+================================================================================
+📋 CI/CD WORKFLOW
+================================================================================
+
+Khi push code lên GitHub:
+
+1. TEST JOB:
+   ✓ Checkout code
+   ✓ Setup Node.js 20
+   ✓ Install dependencies
+   ✓ Generate Prisma Client
+   ✓ Run database migrations
+   ✓ Run linter
+   ✓ Run tests
+   ✓ Build application
+
+2. DEPLOY JOB (chỉ chạy trên main/master):
+   ✓ Checkout code
+   ✓ Setup Node.js 20
+   ✓ Install dependencies
+   ✓ Build application
+   ✓ Deploy to production
+
+================================================================================
+🔐 SECURITY BEST PRACTICES
+================================================================================
+
+1. KHÔNG commit .env file
+   - Đã có trong .gitignore
+   - Sử dụng GitHub Secrets cho CI/CD
+
+2. Sử dụng Secrets trong GitHub Actions
+   - Không hardcode credentials
+   - Tất cả sensitive data trong Secrets
+
+3. Database migrations
+   - Chạy migrations trong CI/CD
+   - Backup database trước khi deploy
+
+4. Health checks
+   - Endpoint /health để monitor
+   - Docker health check đã được cấu hình
+
+================================================================================
+🧪 TESTING
+================================================================================
+
+CI/CD sẽ tự động chạy:
+- Unit tests (npm run test)
+- E2E tests (npm run test:e2e)
+- Linter (npm run lint)
+- Build (npm run build)
+
+Đảm bảo tất cả tests pass trước khi merge vào main.
+
+================================================================================
+📝 CUSTOMIZE DEPLOYMENT
+================================================================================
+
+Để customize deployment, sửa file .github/workflows/ci.yml:
+
+1. Thêm SSH deploy:
+   - name: Deploy via SSH
+     uses: appleboy/ssh-action@master
+     with:
+       host: ${{ secrets.HOST }}
+       username: ${{ secrets.USERNAME }}
+       key: ${{ secrets.SSH_KEY }}
+       script: |
+         cd /path/to/app
+         git pull
+         docker-compose up -d --build
+
+2. Thêm deploy lên Railway/Render:
+   - Sử dụng API của các platform
+   - Hoặc dùng GitHub integration (tự động)
+
+3. Thêm notification:
+   - Slack
+   - Discord
+   - Email
+
+================================================================================
+✅ CHECKLIST
+================================================================================
+
+☐ Đã tạo GitHub repository
+☐ Đã push code lên GitHub
+☐ Đã thêm Secrets vào GitHub
+☐ Đã test workflow trên branch khác
+☐ Đã cấu hình deployment target
+☐ Đã test Docker build local
+☐ Đã test docker-compose local
+☐ Đã setup monitoring/health checks
+
+================================================================================
+                    END OF GUIDE
+================================================================================
+

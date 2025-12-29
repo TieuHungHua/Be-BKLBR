@@ -92,45 +92,57 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto): Promise<AuthResponseDto> {
-    // Tìm user theo username
-    const user = await this.prisma.user.findUnique({
-      where: { username: loginDto.username },
-    });
+    try {
+      // Tìm user theo username
+      const user = await this.prisma.user.findUnique({
+        where: { username: loginDto.username },
+      });
 
-    if (!user) {
-      throw new UnauthorizedException('Tài khoản hoặc mật khẩu không đúng');
+      if (!user) {
+        throw new UnauthorizedException('Tài khoản hoặc mật khẩu không đúng');
+      }
+
+      // Kiểm tra password
+      const isPasswordValid = await bcrypt.compare(
+        loginDto.password,
+        user.password,
+      );
+
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Tài khoản hoặc mật khẩu không đúng');
+      }
+
+      // Tạo JWT tokens
+      const payload = { sub: user.id, username: user.username, role: user.role };
+      const access_token = await this.jwtService.signAsync(payload, {
+        expiresIn: '7d', // Access token: 7 ngày
+      });
+      const refresh_token = await this.jwtService.signAsync(payload, {
+        expiresIn: '30d', // Refresh token: 30 ngày
+      });
+
+      return {
+        access_token,
+        refresh_token,
+        user: {
+          id: user.id,
+          username: user.username,
+          displayName: user.displayName,
+          avatar: user.avatar,
+          role: user.role,
+        },
+      };
+    } catch (error: any) {
+      // Xử lý lỗi kết nối database
+      if (error.code === 'P1001' || error.message?.includes("Can't reach database")) {
+        console.error('❌ Database connection error:', error.message);
+        throw new BadRequestException(
+          'Không thể kết nối đến database. Vui lòng thử lại sau hoặc liên hệ quản trị viên.',
+        );
+      }
+      // Re-throw các lỗi khác (như UnauthorizedException)
+      throw error;
     }
-
-    // Kiểm tra password
-    const isPasswordValid = await bcrypt.compare(
-      loginDto.password,
-      user.password,
-    );
-
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Tài khoản hoặc mật khẩu không đúng');
-    }
-
-    // Tạo JWT tokens
-    const payload = { sub: user.id, username: user.username, role: user.role };
-    const access_token = await this.jwtService.signAsync(payload, {
-      expiresIn: '7d', // Access token: 7 ngày
-    });
-    const refresh_token = await this.jwtService.signAsync(payload, {
-      expiresIn: '30d', // Refresh token: 30 ngày
-    });
-
-    return {
-      access_token,
-      refresh_token,
-      user: {
-        id: user.id,
-        username: user.username,
-        displayName: user.displayName,
-        avatar: user.avatar,
-        role: user.role,
-      },
-    };
   }
 
   async validateUser(userId: string) {
