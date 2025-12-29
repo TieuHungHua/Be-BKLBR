@@ -36,42 +36,72 @@ jobs:
 
       - name: Cache node modules
         uses: actions/cache@v3
+        id: cache
         with:
-          path: backend/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('backend/package-lock.json') }}
+          path: |
+            node_modules
+            backend/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        working-directory: ./backend
-        run: npm ci
+        run: |
+          if [ -f "package.json" ]; then
+            npm ci
+          elif [ -f "backend/package.json" ]; then
+            cd backend && npm ci
+          else
+            echo "Error: package.json not found"
+            exit 1
+          fi
 
       - name: Generate Prisma Client
-        working-directory: ./backend
-        run: npx prisma generate
+        run: |
+          if [ -f "prisma/schema.prisma" ]; then
+            npx prisma generate
+          elif [ -f "backend/prisma/schema.prisma" ]; then
+            cd backend && npx prisma generate
+          fi
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
 
       - name: Run database migrations
-        working-directory: ./backend
-        run: npx prisma migrate deploy
+        run: |
+          if [ -f "prisma/schema.prisma" ]; then
+            npx prisma migrate deploy
+          elif [ -f "backend/prisma/schema.prisma" ]; then
+            cd backend && npx prisma migrate deploy
+          fi
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
 
       - name: Run linter
-        working-directory: ./backend
-        run: npm run lint
+        run: |
+          if [ -f "package.json" ]; then
+            npm run lint
+          elif [ -f "backend/package.json" ]; then
+            cd backend && npm run lint
+          fi
 
       - name: Run tests
-        working-directory: ./backend
-        run: npm run test
+        run: |
+          if [ -f "package.json" ]; then
+            npm run test
+          elif [ -f "backend/package.json" ]; then
+            cd backend && npm run test
+          fi
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
           JWT_SECRET: test-secret-key-for-ci
 
       - name: Build application
-        working-directory: ./backend
-        run: npm run build
+        run: |
+          if [ -f "package.json" ]; then
+            npm run build
+          elif [ -f "backend/package.json" ]; then
+            cd backend && npm run build
+          fi
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
 
@@ -92,18 +122,31 @@ jobs:
       - name: Cache node modules
         uses: actions/cache@v3
         with:
-          path: backend/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('backend/package-lock.json') }}
+          path: |
+            node_modules
+            backend/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        working-directory: ./backend
-        run: npm ci
+        run: |
+          if [ -f "package.json" ]; then
+            npm ci
+          elif [ -f "backend/package.json" ]; then
+            cd backend && npm ci
+          else
+            echo "Error: package.json not found"
+            exit 1
+          fi
 
       - name: Build application
-        working-directory: ./backend
-        run: npm run build
+        run: |
+          if [ -f "package.json" ]; then
+            npm run build
+          elif [ -f "backend/package.json" ]; then
+            cd backend && npm run build
+          fi
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
