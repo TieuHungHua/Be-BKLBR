@@ -46,6 +46,9 @@ export class UploadImageService {
       throw new BadRequestException('File buffer is missing');
     }
 
+    // Store buffer in const to help TypeScript narrow the type
+    const fileBuffer: Buffer = file.buffer;
+
     return new Promise<UploadResponseDto>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
@@ -86,7 +89,7 @@ export class UploadImageService {
       );
 
       // Upload file buffer
-      streamifier.createReadStream(file.buffer).pipe(uploadStream);
+      streamifier.createReadStream(fileBuffer).pipe(uploadStream);
     });
   }
 
