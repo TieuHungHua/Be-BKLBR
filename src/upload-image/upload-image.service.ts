@@ -89,7 +89,8 @@ export class UploadImageService {
       );
 
       // Upload file buffer
-      streamifier.createReadStream(fileBuffer).pipe(uploadStream);
+      const readStream = streamifier.createReadStream(fileBuffer);
+      readStream.pipe(uploadStream);
     });
   }
 
