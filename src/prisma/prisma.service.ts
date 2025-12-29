@@ -34,7 +34,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         });
 
         // Log tất cả các query được execute
-        this.$on('query' as never, (e: any) => {
+        this.$on('query' as never, (e: { query: string; params: string; duration: number }) => {
             console.log('📊 Query:', e.query);
             console.log('📋 Params:', e.params);
             console.log('⏱️  Duration:', e.duration, 'ms');
@@ -46,8 +46,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         try {
             await this.$connect();
             console.log('✅ Database connected successfully');
-        } catch (error) {
-            console.error('❌ Failed to connect to database:', error.message);
+        } catch (error: unknown) {
+            const errorMessage = error && typeof error === 'object' && 'message' in error && typeof error.message === 'string'
+                ? error.message
+                : 'Unknown error';
+            console.error('❌ Failed to connect to database:', errorMessage);
             console.log('⚠️  Database connection will be retried on first query');
             // Không throw error để server vẫn có thể khởi động
             // Connection sẽ được retry khi có query đầu tiên
