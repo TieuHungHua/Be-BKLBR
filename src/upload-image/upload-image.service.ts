@@ -3,7 +3,6 @@ import { v2 as cloudinary } from 'cloudinary';
 import { UploadResponseDto } from './dto/upload-response.dto';
 import { UploadOptions } from './interfaces/upload-options.interface';
 import * as streamifier from 'streamifier';
-import { Readable } from 'stream';
 
 @Injectable()
 export class UploadImageService {
