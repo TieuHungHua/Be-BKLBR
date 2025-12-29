@@ -91,7 +91,7 @@ export class UploadImageService {
 
       // Upload file buffer
       try {
-        const readStream: Readable = streamifier.createReadStream(fileBuffer) as Readable;
+        const readStream = streamifier.createReadStream(fileBuffer);
         readStream.pipe(uploadStream);
       } catch (streamError: unknown) {
         const errorMessage =
