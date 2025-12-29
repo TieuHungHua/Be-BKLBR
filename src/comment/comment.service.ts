@@ -8,7 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { CommentsQueryDto } from './dto/comments-query.dto';
-import { InteractionType, PointReason, EventType } from '@prisma/client';
+import { PointReason, EventType } from '@prisma/client';
 
 @Injectable()
 export class CommentService {
@@ -29,12 +29,11 @@ export class CommentService {
     }
 
     // Kiểm tra user đã comment chưa (unique constraint)
-    const existingComment = await this.prisma.interaction.findUnique({
+    const existingComment = await this.prisma.comment.findUnique({
       where: {
-        userId_bookId_type: {
+        userId_bookId: {
           userId,
           bookId,
-          type: InteractionType.comment,
         },
       },
     });
@@ -46,11 +45,10 @@ export class CommentService {
     // Tạo comment và cập nhật counters trong transaction
     const result = await this.prisma.$transaction(async (tx) => {
       // Tạo comment
-      const comment = await tx.interaction.create({
+      const comment = await tx.comment.create({
         data: {
           userId,
           bookId,
-          type: InteractionType.comment,
           content: createCommentDto.content,
         },
         include: {
@@ -91,7 +89,7 @@ export class CommentService {
           userId,
           delta: 5,
           reason: PointReason.comment,
-          refType: 'interaction_id',
+          refType: 'comment_id',
           refId: comment.id,
           note: 'Bình luận sách',
         },
@@ -118,6 +116,7 @@ export class CommentService {
       content: result.content,
       user: result.user,
       createdAt: result.createdAt,
+      updatedAt: result.updatedAt,
     };
   }
 
@@ -137,10 +136,9 @@ export class CommentService {
 
     // Lấy comments với pagination
     const [comments, total] = await Promise.all([
-      this.prisma.interaction.findMany({
+      this.prisma.comment.findMany({
         where: {
           bookId,
-          type: InteractionType.comment,
         },
         include: {
           user: {
@@ -158,10 +156,9 @@ export class CommentService {
         skip,
         take: limit,
       }),
-      this.prisma.interaction.count({
+      this.prisma.comment.count({
         where: {
           bookId,
-          type: InteractionType.comment,
         },
       }),
     ]);
@@ -172,6 +169,7 @@ export class CommentService {
         content: comment.content,
         user: comment.user,
         createdAt: comment.createdAt,
+        updatedAt: comment.updatedAt,
       })),
       pagination: {
         page,
@@ -188,7 +186,7 @@ export class CommentService {
     updateCommentDto: UpdateCommentDto,
   ) {
     // Tìm comment
-    const comment = await this.prisma.interaction.findUnique({
+    const comment = await this.prisma.comment.findUnique({
       where: { id: commentId },
       include: {
         user: {
@@ -211,13 +209,8 @@ export class CommentService {
       throw new ForbiddenException('Bạn không có quyền sửa bình luận này');
     }
 
-    // Kiểm tra type phải là comment
-    if (comment.type !== InteractionType.comment) {
-      throw new BadRequestException('Đây không phải là bình luận');
-    }
-
     // Cập nhật comment
-    const updated = await this.prisma.interaction.update({
+    const updated = await this.prisma.comment.update({
       where: { id: commentId },
       data: {
         content: updateCommentDto.content,
@@ -239,12 +232,13 @@ export class CommentService {
       content: updated.content,
       user: updated.user,
       createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt,
     };
   }
 
   async deleteComment(userId: string, commentId: string) {
     // Tìm comment
-    const comment = await this.prisma.interaction.findUnique({
+    const comment = await this.prisma.comment.findUnique({
       where: { id: commentId },
     });
 
@@ -257,15 +251,10 @@ export class CommentService {
       throw new ForbiddenException('Bạn không có quyền xóa bình luận này');
     }
 
-    // Kiểm tra type phải là comment
-    if (comment.type !== InteractionType.comment) {
-      throw new BadRequestException('Đây không phải là bình luận');
-    }
-
     // Xóa comment và cập nhật counters trong transaction
     await this.prisma.$transaction(async (tx) => {
       // Xóa comment
-      await tx.interaction.delete({
+      await tx.comment.delete({
         where: { id: commentId },
       });
 

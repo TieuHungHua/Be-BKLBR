@@ -27,7 +27,7 @@ export class CommentResponseDto {
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z', description: 'Thời gian tạo' })
   createdAt: Date;
 
-  @ApiProperty({ example: '2024-01-01T00:00:00.000Z', description: 'Thời gian cập nhật', nullable: true })
-  updatedAt?: Date;
+  @ApiProperty({ example: '2024-01-01T00:00:00.000Z', description: 'Thời gian cập nhật' })
+  updatedAt: Date;
 }
 

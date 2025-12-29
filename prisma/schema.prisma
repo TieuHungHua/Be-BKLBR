@@ -1,5 +1,3 @@
-
-
 generator client {
   provider = "prisma-client-js"
   output   = "../node_modules/.prisma/client"
@@ -53,80 +51,82 @@ enum RedeemStatus {
 
 // Models
 model User {
-  id            String   @id @default(uuid())
-  username      String   @unique
-  password      String   // Hashed password
-  email         String?  @unique
-  phone         String?  @unique
-  studentId     String?  @map("student_id") // Mã sinh viên (chỉ cho student)
-  displayName   String   @map("display_name")
-  avatar        String?
-  classMajor    String?  @map("class_major")
-  role          UserRole @default(student)
-  
+  id          String   @id @default(uuid())
+  username    String   @unique
+  password    String // Hashed password
+  email       String?  @unique
+  phone       String?  @unique
+  studentId   String?  @map("student_id") // Mã sinh viên (chỉ cho student)
+  displayName String   @map("display_name")
+  avatar      String?
+  classMajor  String?  @map("class_major")
+  role        UserRole @default(student)
+
   // Counters (cached/aggregated)
-  totalBorrowed Int      @default(0) @map("total_borrowed")
-  totalReturned Int      @default(0) @map("total_returned")
-  totalLikes    Int      @default(0) @map("total_likes")
-  totalComments Int      @default(0) @map("total_comments")
-  activityScore Int      @default(0) @map("activity_score")
-  
-  createdAt     DateTime @default(now()) @map("created_at")
-  
+  totalBorrowed Int @default(0) @map("total_borrowed")
+  totalReturned Int @default(0) @map("total_returned")
+  totalLikes    Int @default(0) @map("total_likes")
+  totalComments Int @default(0) @map("total_comments")
+  activityScore Int @default(0) @map("activity_score")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
   // Relations
-  borrows            Borrow[]
-  interactions       Interaction[]
-  pointTransactions  PointTransaction[]
-  redeems            Redeem[]
-  activities         Activity[]
-  
-  @@map("users")
+  borrows           Borrow[]
+  interactions      Interaction[]
+  comments          Comment[]
+  pointTransactions PointTransaction[]
+  redeems           Redeem[]
+  activities        Activity[]
+
   @@index([role])
+  @@map("users")
 }
 
 model Book {
-  id            String   @id @default(uuid())
-  title         String
-  author        String
-  categories    String[] @default([])
-  coverImage    String?  @map("cover_image") // URL ảnh bìa từ Cloudinary
-  availableCopies Int    @default(0) @map("available_copies")
-  
+  id              String   @id @default(uuid())
+  title           String
+  author          String
+  categories      String[] @default([])
+  coverImage      String?  @map("cover_image") // URL ảnh bìa từ Cloudinary
+  availableCopies Int      @default(0) @map("available_copies")
+
   // Counters
-  likeCount     Int      @default(0) @map("like_count")
-  commentCount  Int      @default(0) @map("comment_count")
-  borrowCount   Int      @default(0) @map("borrow_count")
-  
-  createdAt     DateTime @default(now()) @map("created_at")
-  
+  likeCount    Int @default(0) @map("like_count")
+  commentCount Int @default(0) @map("comment_count")
+  borrowCount  Int @default(0) @map("borrow_count")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
   // Relations
-  borrows       Borrow[]
-  interactions  Interaction[]
-  activities    Activity[]
-  
-  @@map("books")
+  borrows      Borrow[]
+  interactions Interaction[]
+  comments     Comment[]
+  activities   Activity[]
+
   @@index([title])
   @@index([author])
+  @@map("books")
 }
 
 model Borrow {
-  id          String       @id @default(uuid())
-  userId      String       @map("user_id")
-  bookId      String       @map("book_id")
-  borrowedAt  DateTime     @default(now()) @map("borrowed_at")
-  dueAt       DateTime     @map("due_at")
-  returnedAt  DateTime?    @map("returned_at")
-  status      BorrowStatus @default(active)
-  
+  id         String       @id @default(uuid())
+  userId     String       @map("user_id")
+  bookId     String       @map("book_id")
+  borrowedAt DateTime     @default(now()) @map("borrowed_at")
+  dueAt      DateTime     @map("due_at")
+  returnedAt DateTime?    @map("returned_at")
+  status     BorrowStatus @default(active)
+
   // Relations
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  book        Book         @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  
-  @@map("borrows")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([bookId])
   @@index([status, dueAt])
   @@index([borrowedAt(sort: Desc)])
+  @@map("borrows")
 }
 
 model Interaction {
@@ -136,67 +136,85 @@ model Interaction {
   type      InteractionType
   content   String?
   createdAt DateTime        @default(now()) @map("created_at")
-  
+
   // Relations
-  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  book      Book            @relation(fields: [bookId], references: [id], onDelete: Cascade)
-  
-  @@map("interactions")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId, type])
   @@index([bookId, type])
   @@index([userId, createdAt(sort: Desc)])
-  @@unique([userId, bookId, type])
+  @@map("interactions")
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  bookId    String   @map("book_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId]) // Mỗi user chỉ được comment 1 lần cho mỗi book
+  @@index([bookId, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("comments")
 }
 
 model PointTransaction {
-  id        String       @id @default(uuid())
-  userId    String       @map("user_id")
-  delta     Int          // Positive for earning, negative for spending
+  id        String      @id @default(uuid())
+  userId    String      @map("user_id")
+  delta     Int // Positive for earning, negative for spending
   reason    PointReason
-  refType   String?      @map("ref_type") // 'borrow_id', 'interaction_id', 'reward_id'
-  refId     String?      @map("ref_id")   // UUID reference
+  refType   String?     @map("ref_type") // 'borrow_id', 'interaction_id', 'reward_id'
+  refId     String?     @map("ref_id") // UUID reference
   note      String?
-  createdAt DateTime     @default(now()) @map("created_at")
-  
+  createdAt DateTime    @default(now()) @map("created_at")
+
   // Relations
-  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@map("point_transactions")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId, createdAt(sort: Desc)])
   @@index([reason])
+  @@map("point_transactions")
 }
 
 model Reward {
-  id          String   @id @default(uuid())
+  id          String  @id @default(uuid())
   name        String
   description String?
-  costPoints  Int      @map("cost_points")
-  stock       Int      @default(0)
-  active      Boolean  @default(true)
-  
+  costPoints  Int     @map("cost_points")
+  stock       Int     @default(0)
+  active      Boolean @default(true)
+
   // Relations
-  redeems     Redeem[]
-  activities  Activity[]
-  
-  @@map("rewards")
+  redeems    Redeem[]
+  activities Activity[]
+
   @@index([active])
+  @@map("rewards")
 }
 
 model Redeem {
-  id          String       @id @default(uuid())
-  userId      String       @map("user_id")
-  rewardId    String       @map("reward_id")
-  costPoints  Int          @map("cost_points")
-  status      RedeemStatus @default(pending)
-  note        String?
-  createdAt   DateTime     @default(now()) @map("created_at")
-  
+  id         String       @id @default(uuid())
+  userId     String       @map("user_id")
+  rewardId   String       @map("reward_id")
+  costPoints Int          @map("cost_points")
+  status     RedeemStatus @default(pending)
+  note       String?
+  createdAt  DateTime     @default(now()) @map("created_at")
+
   // Relations
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  reward      Reward       @relation(fields: [rewardId], references: [id], onDelete: Cascade)
-  
-  @@map("redeems")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reward Reward @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+
   @@index([userId, createdAt(sort: Desc)])
   @@index([status, createdAt(sort: Desc)])
+  @@map("redeems")
 }
 
 model Activity {
@@ -205,16 +223,16 @@ model Activity {
   eventType EventType @map("event_type")
   bookId    String?   @map("book_id")
   rewardId  String?   @map("reward_id")
-  payload   Json?     // Small JSON for additional data
+  payload   Json? // Small JSON for additional data
   createdAt DateTime  @default(now()) @map("created_at")
-  
+
   // Relations
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  book      Book?     @relation(fields: [bookId], references: [id], onDelete: SetNull)
-  reward    Reward?   @relation(fields: [rewardId], references: [id], onDelete: SetNull)
-  
-  @@map("activities")
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book   Book?   @relation(fields: [bookId], references: [id], onDelete: SetNull)
+  reward Reward? @relation(fields: [rewardId], references: [id], onDelete: SetNull)
+
   @@index([createdAt(sort: Desc)])
   @@index([userId, createdAt(sort: Desc)])
   @@index([eventType, createdAt(sort: Desc)])
+  @@map("activities")
 }
