@@ -10,11 +10,14 @@ import {
     HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiOperation, ApiResponse, ApiConsumes, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { UploadImageService } from './upload-image.service';
 import { UploadResponseDto } from './dto/upload-response.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { memoryStorage } from 'multer';
 
+@ApiTags('upload')
+@ApiBearerAuth('JWT-auth')
 @Controller('upload')
 export class UploadImageController {
     constructor(private readonly uploadImageService: UploadImageService) { }
@@ -25,6 +28,23 @@ export class UploadImageController {
      */
     @Post('avatar')
     @UseGuards(JwtAuthGuard)
+    @ApiOperation({ summary: 'Upload avatar cho user' })
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                file: {
+                    type: 'string',
+                    format: 'binary',
+                    description: 'File ảnh avatar (jpg, jpeg, png, gif, webp, max 10MB)',
+                },
+            },
+        },
+    })
+    @ApiResponse({ status: 200, description: 'Upload thành công', type: UploadResponseDto })
+    @ApiResponse({ status: 400, description: 'File không hợp lệ hoặc quá lớn' })
+    @ApiResponse({ status: 401, description: 'Chưa đăng nhập' })
     @UseInterceptors(
         FileInterceptor('file', {
             storage: memoryStorage(),
@@ -58,6 +78,23 @@ export class UploadImageController {
      */
     @Post('book')
     @UseGuards(JwtAuthGuard)
+    @ApiOperation({ summary: 'Upload ảnh sách' })
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                file: {
+                    type: 'string',
+                    format: 'binary',
+                    description: 'File ảnh sách (jpg, jpeg, png, gif, webp, max 10MB)',
+                },
+            },
+        },
+    })
+    @ApiResponse({ status: 200, description: 'Upload thành công', type: UploadResponseDto })
+    @ApiResponse({ status: 400, description: 'File không hợp lệ hoặc quá lớn' })
+    @ApiResponse({ status: 401, description: 'Chưa đăng nhập' })
     @UseInterceptors(
         FileInterceptor('file', {
             storage: memoryStorage(),
@@ -92,6 +129,10 @@ export class UploadImageController {
     @Delete(':publicId')
     @UseGuards(JwtAuthGuard)
     @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Xóa ảnh khỏi Cloudinary' })
+    @ApiResponse({ status: 200, description: 'Xóa ảnh thành công' })
+    @ApiResponse({ status: 400, description: 'Ảnh không tồn tại' })
+    @ApiResponse({ status: 401, description: 'Chưa đăng nhập' })
     async deleteImage(@Param('publicId') publicId: string) {
         const result = await this.uploadImageService.deleteImage(publicId);
         return {

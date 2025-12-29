@@ -17,7 +17,13 @@ RUN npx prisma generate
 COPY . .
 
 # Build application
-RUN npm run build
+RUN npm run build || (echo "Build failed!" && exit 1)
+
+# Verify build output exists
+RUN echo "Checking build output..." && \
+    ls -la /app/dist/ && \
+    test -f /app/dist/main.js || (echo "ERROR: main.js not found in dist!" && ls -la /app/dist/ && exit 1) && \
+    echo "Build successful!"
 
 # Production stage
 FROM node:20-alpine AS production
@@ -36,6 +42,15 @@ RUN npx prisma generate
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
+
+# Copy generated Prisma Client (if needed)
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+
+# Verify dist folder was copied
+RUN echo "Verifying copied files..." && \
+    ls -la /app/dist/ && \
+    test -f /app/dist/main.js || (echo "ERROR: main.js not found after copy!" && exit 1) && \
+    echo "Files verified successfully!"
 
 # Expose port
 EXPOSE 3000
