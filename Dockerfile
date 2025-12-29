@@ -16,14 +16,28 @@ RUN npx prisma generate
 # Copy source code
 COPY . .
 
-# Build application
-RUN npm run build || (echo "Build failed!" && exit 1)
-
-# Verify build output exists
-RUN echo "Checking build output..." && \
-    ls -la /app/dist/ && \
-    test -f /app/dist/main.js || (echo "ERROR: main.js not found in dist!" && ls -la /app/dist/ && exit 1) && \
-    echo "Build successful!"
+# Build application with verbose output
+RUN echo "Starting build process..." && \
+    npm run build 2>&1 | tee /tmp/build.log && \
+    BUILD_EXIT_CODE=$? && \
+    echo "Build command completed. Exit code: $BUILD_EXIT_CODE" && \
+    if [ $BUILD_EXIT_CODE -ne 0 ]; then \
+      echo "✗ Build failed with exit code $BUILD_EXIT_CODE" && \
+      echo "Build log:" && cat /tmp/build.log && \
+      exit 1; \
+    fi && \
+    echo "Checking if dist directory exists..." && \
+    (test -d /app/dist && echo "✓ dist directory exists" || (echo "✗ dist directory NOT found!" && exit 1)) && \
+    echo "Listing dist directory contents:" && \
+    ls -la /app/dist/ || (echo "✗ Cannot list dist directory!" && exit 1) && \
+    echo "Searching for main.js..." && \
+    find /app/dist -name "main.js" -type f && \
+    echo "Checking for main.js at dist/main.js..." && \
+    (test -f /app/dist/main.js && echo "✓ main.js found at dist/main.js!" || \
+     (echo "✗ main.js NOT found at dist/main.js!" && \
+      echo "Files in dist:" && find /app/dist -type f -name "*.js" | head -20 && \
+      echo "Build log:" && cat /tmp/build.log && exit 1)) && \
+    echo "Build verification successful!"
 
 # Production stage
 FROM node:20-alpine AS production
