@@ -14,7 +14,9 @@ import { PrismaModule } from '../prisma/prisma.module';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') || 'your-secret-key-change-in-production',
+        secret:
+          configService.get<string>('JWT_SECRET') ||
+          'your-secret-key-change-in-production',
         signOptions: { expiresIn: '7d' }, // Access token hết hạn sau 7 ngày
       }),
       inject: [ConfigService],
@@ -25,4 +27,3 @@ import { PrismaModule } from '../prisma/prisma.module';
   exports: [AuthService],
 })
 export class AuthModule {}
-

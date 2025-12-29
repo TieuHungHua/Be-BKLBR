@@ -17,7 +17,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-  ) { }
+  ) {}
 
   async register(registerDto: RegisterDto): Promise<AuthResponseDto> {
     // Kiểm tra password và confirmPassword khớp nhau
@@ -27,7 +27,9 @@ export class AuthService {
 
     // Kiểm tra nếu là student thì phải có studentId
     if (registerDto.role === RegisterRole.student && !registerDto.studentId) {
-      throw new BadRequestException('Mã sinh viên là bắt buộc cho tài khoản sinh viên');
+      throw new BadRequestException(
+        'Mã sinh viên là bắt buộc cho tài khoản sinh viên',
+      );
     }
 
     // Kiểm tra username đã tồn tại chưa
@@ -114,7 +116,11 @@ export class AuthService {
       }
 
       // Tạo JWT tokens
-      const payload = { sub: user.id, username: user.username, role: user.role };
+      const payload = {
+        sub: user.id,
+        username: user.username,
+        role: user.role,
+      };
       const access_token = await this.jwtService.signAsync(payload, {
         expiresIn: '7d', // Access token: 7 ngày
       });
@@ -171,10 +177,16 @@ export class AuthService {
     return user;
   }
 
-  async refreshToken(refreshToken: string): Promise<{ access_token: string; refresh_token: string }> {
+  async refreshToken(
+    refreshToken: string,
+  ): Promise<{ access_token: string; refresh_token: string }> {
     try {
       // Verify refresh token
-      const payload = await this.jwtService.verifyAsync<{ sub: string; username: string; role: UserRole }>(refreshToken);
+      const payload = await this.jwtService.verifyAsync<{
+        sub: string;
+        username: string;
+        role: UserRole;
+      }>(refreshToken);
 
       if (!payload || !payload.sub) {
         throw new UnauthorizedException('Refresh token không hợp lệ');
@@ -190,7 +202,11 @@ export class AuthService {
       }
 
       // Tạo tokens mới
-      const newPayload = { sub: user.id, username: user.username, role: user.role };
+      const newPayload = {
+        sub: user.id,
+        username: user.username,
+        role: user.role,
+      };
       const access_token = await this.jwtService.signAsync(newPayload, {
         expiresIn: '7d',
       });
@@ -206,8 +222,9 @@ export class AuthService {
       if (error instanceof UnauthorizedException) {
         throw error;
       }
-      throw new UnauthorizedException('Refresh token không hợp lệ hoặc đã hết hạn');
+      throw new UnauthorizedException(
+        'Refresh token không hợp lệ hoặc đã hết hạn',
+      );
     }
   }
 }
-

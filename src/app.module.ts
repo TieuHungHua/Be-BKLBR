@@ -19,4 +19,4 @@ import { UploadImageModule } from './upload-image/upload-image.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

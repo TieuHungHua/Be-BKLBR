@@ -9,13 +9,17 @@ import { AuthResponseDto } from './dto/auth-response.dto';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) { }
+  constructor(private authService: AuthService) {}
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Đăng ký tài khoản mới' })
   @ApiBody({ type: RegisterDto })
-  @ApiResponse({ status: 201, description: 'Đăng ký thành công', type: AuthResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Đăng ký thành công',
+    type: AuthResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ' })
   @ApiResponse({ status: 409, description: 'Tài khoản đã tồn tại' })
   async register(@Body() registerDto: RegisterDto): Promise<AuthResponseDto> {
@@ -26,8 +30,15 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Đăng nhập' })
   @ApiBody({ type: LoginDto })
-  @ApiResponse({ status: 200, description: 'Đăng nhập thành công', type: AuthResponseDto })
-  @ApiResponse({ status: 401, description: 'Tài khoản hoặc mật khẩu không đúng' })
+  @ApiResponse({
+    status: 200,
+    description: 'Đăng nhập thành công',
+    type: AuthResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Tài khoản hoặc mật khẩu không đúng',
+  })
   async login(@Body() loginDto: LoginDto): Promise<AuthResponseDto> {
     return this.authService.login(loginDto);
   }
@@ -37,9 +48,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Làm mới access token' })
   @ApiBody({ type: RefreshTokenDto })
   @ApiResponse({ status: 200, description: 'Làm mới token thành công' })
-  @ApiResponse({ status: 401, description: 'Refresh token không hợp lệ hoặc đã hết hạn' })
+  @ApiResponse({
+    status: 401,
+    description: 'Refresh token không hợp lệ hoặc đã hết hạn',
+  })
   async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.authService.refreshToken(refreshTokenDto.refresh_token);
   }
 }
-

@@ -61,19 +61,23 @@ export class UploadImageService {
         },
         (
           error: Error | undefined,
-          result: {
-            secure_url: string;
-            public_id: string;
-            width: number;
-            height: number;
-            format: string;
-            bytes: number;
-          } | undefined,
+          result:
+            | {
+                secure_url: string;
+                public_id: string;
+                width: number;
+                height: number;
+                format: string;
+                bytes: number;
+              }
+            | undefined,
         ) => {
           if (error) {
             reject(new BadRequestException(`Upload failed: ${error.message}`));
           } else if (!result) {
-            reject(new BadRequestException('Upload failed: No result returned'));
+            reject(
+              new BadRequestException('Upload failed: No result returned'),
+            );
           } else {
             resolve({
               url: result.secure_url,
@@ -94,7 +98,10 @@ export class UploadImageService {
         readStream.pipe(uploadStream);
       } catch (streamError: unknown) {
         const errorMessage =
-          streamError && typeof streamError === 'object' && 'message' in streamError && typeof streamError.message === 'string'
+          streamError &&
+          typeof streamError === 'object' &&
+          'message' in streamError &&
+          typeof streamError.message === 'string'
             ? streamError.message
             : 'Failed to create read stream';
         reject(new BadRequestException(`Upload failed: ${errorMessage}`));
@@ -109,9 +116,9 @@ export class UploadImageService {
    */
   async deleteImage(publicId: string): Promise<{ result: string }> {
     try {
-      const result = await cloudinary.uploader.destroy(publicId, {
+      const result = (await cloudinary.uploader.destroy(publicId, {
         resource_type: 'image',
-      }) as { result: string };
+      })) as { result: string };
 
       if (result.result === 'not found') {
         throw new BadRequestException('Ảnh không tồn tại');
@@ -120,7 +127,10 @@ export class UploadImageService {
       return { result: result.result };
     } catch (error: unknown) {
       const errorMessage =
-        error && typeof error === 'object' && 'message' in error && typeof error.message === 'string'
+        error &&
+        typeof error === 'object' &&
+        'message' in error &&
+        typeof error.message === 'string'
           ? error.message
           : 'Unknown error';
       throw new BadRequestException(`Xóa ảnh thất bại: ${errorMessage}`);
@@ -161,5 +171,3 @@ export class UploadImageService {
     });
   }
 }
-
-

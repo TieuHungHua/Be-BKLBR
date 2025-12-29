@@ -9,4 +9,3 @@ import { PrismaService } from './prisma.service';
 export class PrismaModule {
   // ConfigModule đã được import global trong AppModule
 }
-

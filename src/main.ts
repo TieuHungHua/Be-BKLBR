@@ -16,13 +16,12 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:8081',
-      'http://localhost:19006',  // Expo web default
-      'http://localhost:19000',   // Expo web alternative
-      'http://10.0.2.2:3000',     // Android emulator
+      'http://localhost:19006', // Expo web default
+      'http://localhost:19000', // Expo web alternative
+      'http://10.0.2.2:3000', // Android emulator
     ],
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
-
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   });
 
   // Enable validation globally
@@ -57,8 +56,12 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   await app.listen(process.env.PORT ?? 3000);
-  console.log(`Application is running on: http://localhost:${process.env.PORT ?? 3000}`);
-  console.log(`Swagger documentation: http://localhost:${process.env.PORT ?? 3000}/api`);
+  console.log(
+    `Application is running on: http://localhost:${process.env.PORT ?? 3000}`,
+  );
+  console.log(
+    `Swagger documentation: http://localhost:${process.env.PORT ?? 3000}/api`,
+  );
 }
 bootstrap().catch((error) => {
   console.error('Failed to start application:', error);
