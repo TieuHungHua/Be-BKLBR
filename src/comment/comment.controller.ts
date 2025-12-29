@@ -26,6 +26,7 @@ import { CommentsQueryDto } from './dto/comments-query.dto';
 import { CommentResponseDto } from './dto/comment-response.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { CurrentUserType } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('comments')
 @ApiBearerAuth('JWT-auth')
@@ -49,7 +50,7 @@ export class CommentController {
   async createComment(
     @Param('bookId') bookId: string,
     @Body() createCommentDto: CreateCommentDto,
-    @CurrentUser() user: { id: string },
+    @CurrentUser() user: CurrentUserType,
   ) {
     return this.commentService.createComment(user.id, bookId, createCommentDto);
   }
@@ -108,7 +109,7 @@ export class CommentController {
     @Param('bookId') bookId: string,
     @Param('commentId') commentId: string,
     @Body() updateCommentDto: UpdateCommentDto,
-    @CurrentUser() user: { id: string },
+    @CurrentUser() user: CurrentUserType,
   ) {
     return this.commentService.updateComment(user.id, commentId, updateCommentDto);
   }
@@ -134,7 +135,7 @@ export class CommentController {
   async deleteComment(
     @Param('bookId') bookId: string,
     @Param('commentId') commentId: string,
-    @CurrentUser() user: { id: string },
+    @CurrentUser() user: CurrentUserType,
   ) {
     return this.commentService.deleteComment(user.id, commentId);
   }
