@@ -3,6 +3,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import { UploadResponseDto } from './dto/upload-response.dto';
 import { UploadOptions } from './interfaces/upload-options.interface';
 import * as streamifier from 'streamifier';
+import { Readable } from 'stream';
 
 @Injectable()
 export class UploadImageService {
@@ -89,8 +90,16 @@ export class UploadImageService {
       );
 
       // Upload file buffer
-      const readStream = streamifier.createReadStream(fileBuffer);
-      readStream.pipe(uploadStream);
+      try {
+        const readStream: Readable = streamifier.createReadStream(fileBuffer) as Readable;
+        readStream.pipe(uploadStream);
+      } catch (streamError: unknown) {
+        const errorMessage =
+          streamError && typeof streamError === 'object' && 'message' in streamError && typeof streamError.message === 'string'
+            ? streamError.message
+            : 'Failed to create read stream';
+        reject(new BadRequestException(`Upload failed: ${errorMessage}`));
+      }
     });
   }
 
