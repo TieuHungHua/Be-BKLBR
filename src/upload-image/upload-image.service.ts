@@ -7,12 +7,44 @@ import * as streamifier from 'streamifier';
 @Injectable()
 export class UploadImageService {
   constructor() {
+    // Lấy các biến môi trường Cloudinary (đã được load bởi dotenv trong main.ts)
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+    // Validate các biến môi trường
+    if (!cloudName) {
+      console.error('❌ Thiếu biến môi trường: CLOUDINARY_CLOUD_NAME');
+      console.error('Vui lòng kiểm tra file .env trong thư mục backend');
+      throw new Error(
+        'Thiếu cấu hình Cloudinary: CLOUDINARY_CLOUD_NAME. Vui lòng kiểm tra file .env',
+      );
+    }
+
+    if (!apiKey) {
+      console.error('❌ Thiếu biến môi trường: CLOUDINARY_API_KEY');
+      console.error('Vui lòng kiểm tra file .env trong thư mục backend');
+      throw new Error(
+        'Thiếu cấu hình Cloudinary: CLOUDINARY_API_KEY. Vui lòng kiểm tra file .env',
+      );
+    }
+
+    if (!apiSecret) {
+      console.error('❌ Thiếu biến môi trường: CLOUDINARY_API_SECRET');
+      console.error('Vui lòng kiểm tra file .env trong thư mục backend');
+      throw new Error(
+        'Thiếu cấu hình Cloudinary: CLOUDINARY_API_SECRET. Vui lòng kiểm tra file .env',
+      );
+    }
+
     // Cấu hình Cloudinary
     cloudinary.config({
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY,
-      api_secret: process.env.CLOUDINARY_API_SECRET,
+      cloud_name: cloudName,
+      api_key: apiKey,
+      api_secret: apiSecret,
     });
+
+    console.log('✅ Cloudinary đã được cấu hình thành công');
   }
 
   /**
@@ -63,13 +95,13 @@ export class UploadImageService {
           error: Error | undefined,
           result:
             | {
-                secure_url: string;
-                public_id: string;
-                width: number;
-                height: number;
-                format: string;
-                bytes: number;
-              }
+              secure_url: string;
+              public_id: string;
+              width: number;
+              height: number;
+              format: string;
+              bytes: number;
+            }
             | undefined,
         ) => {
           if (error) {
@@ -99,9 +131,9 @@ export class UploadImageService {
       } catch (streamError: unknown) {
         const errorMessage =
           streamError &&
-          typeof streamError === 'object' &&
-          'message' in streamError &&
-          typeof streamError.message === 'string'
+            typeof streamError === 'object' &&
+            'message' in streamError &&
+            typeof streamError.message === 'string'
             ? streamError.message
             : 'Failed to create read stream';
         reject(new BadRequestException(`Upload failed: ${errorMessage}`));
@@ -128,9 +160,9 @@ export class UploadImageService {
     } catch (error: unknown) {
       const errorMessage =
         error &&
-        typeof error === 'object' &&
-        'message' in error &&
-        typeof error.message === 'string'
+          typeof error === 'object' &&
+          'message' in error &&
+          typeof error.message === 'string'
           ? error.message
           : 'Unknown error';
       throw new BadRequestException(`Xóa ảnh thất bại: ${errorMessage}`);
