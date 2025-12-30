@@ -19,6 +19,7 @@ async function bootstrap() {
       'http://localhost:19006', // Expo web default
       'http://localhost:19000', // Expo web alternative
       'http://10.0.2.2:3000', // Android emulator
+      'http://localhost:3000',
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
