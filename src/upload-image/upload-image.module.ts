@@ -7,4 +7,7 @@ import { UploadImageController } from './upload-image.controller';
   providers: [UploadImageService],
   exports: [UploadImageService],
 })
-export class UploadImageModule {}
+export class UploadImageModule { }
+
+
+
