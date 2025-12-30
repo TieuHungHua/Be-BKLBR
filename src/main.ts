@@ -1,7 +1,37 @@
 // Load .env file FIRST, before any other imports
 import { config } from 'dotenv';
 import { join } from 'path';
-config({ path: join(process.cwd(), '.env') });
+import { existsSync } from 'fs';
+
+// Thử load .env từ nhiều vị trí có thể
+const possiblePaths = [
+  join(process.cwd(), '.env'), // Từ thư mục hiện tại (khi chạy npm start từ backend/)
+  join(__dirname, '..', '..', '.env'), // Từ dist/src lùi 2 cấp về backend/
+  join(__dirname, '..', '.env'), // Từ dist/src lùi 1 cấp về dist/
+];
+
+let envLoaded = false;
+for (const envPath of possiblePaths) {
+  if (existsSync(envPath)) {
+    config({ path: envPath });
+    console.log('✅ Loaded .env from:', envPath);
+    envLoaded = true;
+    break;
+  }
+}
+
+if (!envLoaded) {
+  console.warn('⚠️  Không tìm thấy file .env ở các vị trí sau:');
+  possiblePaths.forEach((path) => console.warn('  -', path));
+  console.warn('Đang thử load từ process.env (có thể đã được set từ hệ thống)');
+  config(); // Load từ process.env nếu có
+}
+
+// Debug: Kiểm tra các biến môi trường Cloudinary
+console.log('🔍 Checking Cloudinary env vars:');
+console.log('  CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME ? '✅ Found' : '❌ Missing');
+console.log('  CLOUDINARY_API_KEY:', process.env.CLOUDINARY_API_KEY ? '✅ Found' : '❌ Missing');
+console.log('  CLOUDINARY_API_SECRET:', process.env.CLOUDINARY_API_SECRET ? '✅ Found' : '❌ Missing');
 
 // Now import NestJS modules
 import { NestFactory } from '@nestjs/core';
