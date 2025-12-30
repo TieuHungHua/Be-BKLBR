@@ -19,9 +19,11 @@ export class CreateBookDto {
     type: [String],
     required: false,
   })
-  @Transform(({ value }) => {
+  @Transform(({ value }): string[] => {
     if (!value) return [];
-    if (Array.isArray(value)) return value;
+    if (Array.isArray(value)) {
+      return value.filter((item): item is string => typeof item === 'string');
+    }
     if (typeof value === 'string') {
       // Nếu là string, split bằng comma
       return value.split(',').map((item: string) => item.trim()).filter(Boolean);
