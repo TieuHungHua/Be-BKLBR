@@ -8,18 +8,39 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { BooksQueryDto } from './dto/books-query.dto';
+import { UploadImageService } from '../upload-image/upload-image.service';
 
 @Injectable()
 export class BookService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private uploadImageService: UploadImageService,
+  ) {}
 
-  async create(createBookDto: CreateBookDto) {
+  async create(
+    createBookDto: CreateBookDto,
+    coverImageFile?: Express.Multer.File,
+  ) {
+    let coverImageUrl: string | null = null;
+
+    // Nếu có file ảnh, upload lên Cloudinary
+    if (coverImageFile) {
+      const uploadResult = await this.uploadImageService.uploadBookImage(
+        coverImageFile,
+      );
+      coverImageUrl = uploadResult.secureUrl;
+    }
+    // Nếu không có file nhưng có URL từ DTO, dùng URL đó
+    else if (createBookDto.coverImageUrl) {
+      coverImageUrl = createBookDto.coverImageUrl;
+    }
+
     return this.prisma.book.create({
       data: {
         title: createBookDto.title,
         author: createBookDto.author,
         categories: createBookDto.categories || [],
-        coverImage: createBookDto.coverImage || null,
+        coverImage: coverImageUrl,
         availableCopies: createBookDto.availableCopies || 0,
       },
     });

@@ -101,3 +101,5 @@ npx nest build --verbose
 3. **Missing dependencies**: Đảm bảo `npm install` chạy đầy đủ
 4. **Wrong working directory**: Verify WORKDIR trong Dockerfile hoặc build settings
 
+
+

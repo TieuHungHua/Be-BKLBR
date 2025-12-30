@@ -10,6 +10,8 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -18,7 +20,11 @@ import {
   ApiBearerAuth,
   ApiParam,
   ApiQuery,
+  ApiConsumes,
+  ApiBody,
 } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { BookService } from './book.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
@@ -35,7 +41,47 @@ export class BookController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Tạo sách mới' })
+  @ApiOperation({ summary: 'Tạo sách mới (có thể kèm file ảnh bìa)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        title: {
+          type: 'string',
+          description: 'Tên sách',
+          example: 'Clean Code',
+        },
+        author: {
+          type: 'string',
+          description: 'Tác giả',
+          example: 'Robert C. Martin',
+        },
+        categories: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Danh mục sách',
+          example: ['Programming', 'Software Engineering'],
+        },
+        coverImage: {
+          type: 'string',
+          format: 'binary',
+          description: 'File ảnh bìa sách (jpg, jpeg, png, gif, webp, max 10MB). Nếu không có file, có thể gửi URL ảnh trong coverImageUrl',
+        },
+        coverImageUrl: {
+          type: 'string',
+          description: 'URL ảnh bìa từ Cloudinary (nếu không upload file)',
+          example: 'https://res.cloudinary.com/...',
+        },
+        availableCopies: {
+          type: 'number',
+          description: 'Số lượng bản sao có sẵn',
+          example: 5,
+        },
+      },
+      required: ['title', 'author'],
+    },
+  })
   @ApiResponse({
     status: 201,
     description: 'Tạo sách thành công',
@@ -43,8 +89,32 @@ export class BookController {
   })
   @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ' })
   @ApiResponse({ status: 401, description: 'Chưa đăng nhập' })
-  async create(@Body() createBookDto: CreateBookDto) {
-    return this.bookService.create(createBookDto);
+  @UseInterceptors(
+    FileInterceptor('coverImage', {
+      storage: memoryStorage(),
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB
+      },
+      fileFilter: (req, file, cb) => {
+        if (!file) {
+          // File không bắt buộc, cho phép không có file
+          return cb(null, true);
+        }
+        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
+          return cb(
+            new Error('Chỉ chấp nhận file ảnh (jpg, jpeg, png, gif, webp)'),
+            false,
+          );
+        }
+        cb(null, true);
+      },
+    }),
+  )
+  async create(
+    @Body() createBookDto: CreateBookDto,
+    @UploadedFile() coverImageFile?: Express.Multer.File,
+  ) {
+    return this.bookService.create(createBookDto, coverImageFile);
   }
 
   @Get()
@@ -131,4 +201,6 @@ export class BookController {
     return this.bookService.remove(id);
   }
 }
+
+
 

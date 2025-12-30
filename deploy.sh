@@ -31,3 +31,5 @@ npx prisma generate
 
 echo "✅ Deployment completed!"
 
+
+
