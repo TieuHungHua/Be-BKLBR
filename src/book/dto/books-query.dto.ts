@@ -57,6 +57,28 @@ export class BooksQueryDto {
   @IsOptional()
   @IsString()
   category?: string;
+
+  @ApiProperty({
+    example: 'createdAt',
+    description: 'Trường để sắp xếp (createdAt, title, author)',
+    required: false,
+    enum: ['createdAt', 'title', 'author'],
+    default: 'createdAt',
+  })
+  @IsOptional()
+  @IsString()
+  sortBy?: string = 'createdAt';
+
+  @ApiProperty({
+    example: 'desc',
+    description: 'Thứ tự sắp xếp (asc: tăng dần, desc: giảm dần)',
+    required: false,
+    enum: ['asc', 'desc'],
+    default: 'desc',
+  })
+  @IsOptional()
+  @IsString()
+  sortOrder?: 'asc' | 'desc' = 'desc';
 }
 
 

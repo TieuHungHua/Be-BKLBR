@@ -73,17 +73,30 @@ export class BookService {
       };
     }
 
+    // Xử lý sort
+    const sortBy = query.sortBy || 'createdAt';
+    const sortOrder = query.sortOrder || 'desc';
+    
+    const orderBy: Prisma.BookOrderByWithRelationInput = {};
+    if (sortBy === 'title') {
+      orderBy.title = sortOrder;
+    } else if (sortBy === 'author') {
+      orderBy.author = sortOrder;
+    } else {
+      orderBy.createdAt = sortOrder;
+    }
+
     const [books, total] = await Promise.all([
       this.prisma.book.findMany({
         where,
         skip,
         take: limit,
-        orderBy: {
-          createdAt: 'desc',
-        },
+        orderBy,
       }),
       this.prisma.book.count({ where }),
     ]);
+
+    const totalPages = Math.ceil(total / limit);
 
     return {
       data: books,
@@ -91,7 +104,9 @@ export class BookService {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit),
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
       },
     };
   }

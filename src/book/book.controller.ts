@@ -119,12 +119,14 @@ export class BookController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Lấy danh sách sách' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'search', required: false, type: String })
-  @ApiQuery({ name: 'author', required: false, type: String })
-  @ApiQuery({ name: 'category', required: false, type: String })
+  @ApiOperation({ summary: 'Lấy danh sách sách với phân trang và tìm kiếm' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Số trang (mặc định: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Số lượng sách mỗi trang (mặc định: 10, tối đa: 100)' })
+  @ApiQuery({ name: 'search', required: false, type: String, description: 'Tìm kiếm theo tên sách' })
+  @ApiQuery({ name: 'author', required: false, type: String, description: 'Lọc theo tác giả' })
+  @ApiQuery({ name: 'category', required: false, type: String, description: 'Lọc theo danh mục' })
+  @ApiQuery({ name: 'sortBy', required: false, type: String, enum: ['createdAt', 'title', 'author'], description: 'Trường để sắp xếp (mặc định: createdAt)' })
+  @ApiQuery({ name: 'sortOrder', required: false, type: String, enum: ['asc', 'desc'], description: 'Thứ tự sắp xếp (mặc định: desc)' })
   @ApiResponse({
     status: 200,
     description: 'Lấy danh sách sách thành công',
@@ -138,10 +140,12 @@ export class BookController {
         pagination: {
           type: 'object',
           properties: {
-            page: { type: 'number' },
-            limit: { type: 'number' },
-            total: { type: 'number' },
-            totalPages: { type: 'number' },
+            page: { type: 'number', example: 1 },
+            limit: { type: 'number', example: 10 },
+            total: { type: 'number', example: 100 },
+            totalPages: { type: 'number', example: 10 },
+            hasNextPage: { type: 'boolean', example: true },
+            hasPreviousPage: { type: 'boolean', example: false },
           },
         },
       },
