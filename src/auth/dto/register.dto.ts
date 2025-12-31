@@ -13,6 +13,7 @@ import { IsStrongPassword } from '../validators/password.validator';
 export enum RegisterRole {
   student = 'student',
   lecturer = 'lecturer',
+  admin = 'admin',
 }
 
 export class RegisterDto {
