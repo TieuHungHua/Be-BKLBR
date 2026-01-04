@@ -5,6 +5,34 @@ import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 
+interface MeetingBookingUser {
+  id: string;
+  username: string;
+  displayName: string;
+  role: 'student' | 'admin' | 'lecturer';
+}
+
+interface MeetingBookingResponse {
+  id: string;
+  user: MeetingBookingUser;
+  tableName: string;
+  startAt: string;
+  endAt: string;
+  purpose: string | null;
+  attendees: number | null;
+  createdAt: string;
+}
+
+interface MeetingBookingListResponse {
+  data: MeetingBookingResponse[];
+  criteria: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 describe('MeetingBooking (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
@@ -70,10 +98,11 @@ describe('MeetingBooking (e2e)', () => {
       })
       .expect(201);
 
-    bookingId = response.body.id;
+    const body = response.body as MeetingBookingResponse;
+    bookingId = body.id;
 
-    expect(response.body.tableName).toBe(tableName);
-    expect(response.body.user.id).toBe(userId);
+    expect(body.tableName).toBe(tableName);
+    expect(body.user.id).toBe(userId);
   });
 
   it('POST /meeting-bookings rejects overlapping time', async () => {
@@ -93,7 +122,8 @@ describe('MeetingBooking (e2e)', () => {
       .get('/meeting-bookings')
       .expect(200);
 
-    const ids = response.body.data.map((item: { id: string }) => item.id);
+    const body = response.body as MeetingBookingListResponse;
+    const ids = body.data.map((item) => item.id);
     expect(ids).toContain(bookingId);
   });
 
@@ -102,7 +132,8 @@ describe('MeetingBooking (e2e)', () => {
       .get(`/meeting-bookings/${bookingId}`)
       .expect(200);
 
-    expect(response.body.id).toBe(bookingId);
+    const body = response.body as MeetingBookingResponse;
+    expect(body.id).toBe(bookingId);
   });
 
   it('PATCH /meeting-bookings/:id updates booking', async () => {
@@ -119,9 +150,10 @@ describe('MeetingBooking (e2e)', () => {
       })
       .expect(200);
 
-    expect(response.body.startAt).toBe(newStartAt);
-    expect(response.body.endAt).toBe(newEndAt);
-    expect(response.body.purpose).toBe('Updated');
+    const body = response.body as MeetingBookingResponse;
+    expect(body.startAt).toBe(newStartAt);
+    expect(body.endAt).toBe(newEndAt);
+    expect(body.purpose).toBe('Updated');
   });
 
   it('DELETE /meeting-bookings/:id removes booking', async () => {
