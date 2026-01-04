@@ -8,6 +8,12 @@ describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
 
   beforeEach(async () => {
+    process.env.CLOUDINARY_CLOUD_NAME =
+      process.env.CLOUDINARY_CLOUD_NAME || 'test';
+    process.env.CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY || 'test';
+    process.env.CLOUDINARY_API_SECRET =
+      process.env.CLOUDINARY_API_SECRET || 'test';
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
