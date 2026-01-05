@@ -89,6 +89,10 @@ model Book {
   author          String
   categories      String[] @default([])
   coverImage      String?  @map("cover_image") // URL ảnh bìa từ Cloudinary
+  description     String?  // Mô tả sách
+  publisher       String?  // Nhà xuất bản
+  publicationYear Int?     @map("publication_year") // Năm xuất bản
+  pages           Int?     // Số trang
   availableCopies Int      @default(0) @map("available_copies")
 
   // Counters
