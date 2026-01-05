@@ -44,7 +44,7 @@ type BookingWithRelations = Prisma.RoomBookingGetPayload<{
 
 @Injectable()
 export class RoomBookingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async createBooking(user: CurrentUserType, dto: CreateBookingDto) {
     const startAt = new Date(dto.start_at);
@@ -460,9 +460,10 @@ export class RoomBookingService {
     }
 
     return sorts.map((sort) => {
-      const field = this.mapSortField(sort.field);
+      const sortField = sort.field;
+      const field = this.mapSortField(sortField);
       if (!field) {
-        throw new BadRequestException(`Unsupported sort field: ${String(sort.field)}`);
+        throw new BadRequestException(`Unsupported sort field: ${sortField}`);
       }
       const direction = sort.dir === SortDirection.ASC ? 'asc' : 'desc';
       return { [field]: direction };
