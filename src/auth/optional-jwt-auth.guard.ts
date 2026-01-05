@@ -8,8 +8,6 @@ export class OptionalJwtAuthGuard extends AuthGuard('jwt') {
     err: any,
     user: any,
     info: any,
-    _context: ExecutionContext,
-    _status?: any,
   ): TUser {
     if (err || info) {
       return null as TUser;
