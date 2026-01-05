@@ -157,11 +157,12 @@ export class BookService {
   }
 
   async update(id: string, updateBookDto: UpdateBookDto) {
-    const book = await this.prisma.book.findUnique({
+    // Kiểm tra sách có tồn tại không
+    const existingBook = await this.prisma.book.findUnique({
       where: { id },
     });
 
-    if (!book) {
+    if (!existingBook) {
       throw new NotFoundException('Sách không tồn tại');
     }
 
