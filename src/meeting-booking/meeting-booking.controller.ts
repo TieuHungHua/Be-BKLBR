@@ -38,7 +38,7 @@ export class MeetingBookingController {
   })
   @ApiResponse({ status: 400, description: 'Invalid data or time slot conflict' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async create(@Body() createMeetingBookingDto: CreateMeetingBookingDto) {
+  async create(@Body() createMeetingBookingDto: CreateMeetingBookingDto): Promise<MeetingBookingResponseDto> {
     return this.meetingBookingService.create(createMeetingBookingDto);
   }
 
@@ -69,7 +69,15 @@ export class MeetingBookingController {
       },
     },
   })
-  async findAll(@Query() criteria: MeetingBookingsCriteriaDto) {
+  async findAll(@Query() criteria: MeetingBookingsCriteriaDto): Promise<{
+    data: MeetingBookingResponseDto[];
+    criteria: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
     return this.meetingBookingService.findAll(criteria);
   }
 
@@ -83,7 +91,7 @@ export class MeetingBookingController {
     type: MeetingBookingResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Meeting booking not found' })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string): Promise<MeetingBookingResponseDto> {
     return this.meetingBookingService.findOne(id);
   }
 
@@ -101,7 +109,7 @@ export class MeetingBookingController {
   async update(
     @Param('id') id: string,
     @Body() updateMeetingBookingDto: UpdateMeetingBookingDto,
-  ) {
+  ): Promise<MeetingBookingResponseDto> {
     return this.meetingBookingService.update(id, updateMeetingBookingDto);
   }
 
@@ -116,7 +124,7 @@ export class MeetingBookingController {
     type: MeetingBookingResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Meeting booking or user not found' })
-  async remove(@Param('id') id: string, @Query('userId') userId: string) {
+  async remove(@Param('id') id: string, @Query('userId') userId: string): Promise<MeetingBookingResponseDto> {
     return this.meetingBookingService.remove(id, userId);
   }
 }

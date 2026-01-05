@@ -4,11 +4,26 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { UserRole } from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMeetingBookingDto } from './dto/create-meeting-booking.dto';
 import { MeetingBookingsCriteriaDto } from './dto/meeting-bookings-criteria.dto';
 import { UpdateMeetingBookingDto } from './dto/update-meeting-booking.dto';
+
+const MEETING_BOOKING_INCLUDE = {
+  user: {
+    select: {
+      id: true,
+      username: true,
+      displayName: true,
+      role: true,
+    },
+  },
+} as const;
+
+type MeetingBookingWithUser = Prisma.MeetingBookingGetPayload<{
+  include: typeof MEETING_BOOKING_INCLUDE;
+}>;
 
 @Injectable()
 export class MeetingBookingService {
@@ -26,7 +41,7 @@ export class MeetingBookingService {
     }
   }
 
-  async create(createMeetingBookingDto: CreateMeetingBookingDto) {
+  async create(createMeetingBookingDto: CreateMeetingBookingDto): Promise<MeetingBookingWithUser> {
     const user = await this.prisma.user.findUnique({
       where: { id: createMeetingBookingDto.userId },
       select: {
@@ -76,36 +91,26 @@ export class MeetingBookingService {
         purpose: createMeetingBookingDto.purpose,
         attendees: createMeetingBookingDto.attendees,
       },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            displayName: true,
-            role: true,
-          },
-        },
-      },
+      include: MEETING_BOOKING_INCLUDE,
     });
   }
 
-  async findAll(criteria: MeetingBookingsCriteriaDto) {
+  async findAll(criteria: MeetingBookingsCriteriaDto): Promise<{
+    data: MeetingBookingWithUser[];
+    criteria: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }> {
     const page = criteria.page || 1;
     const limit = criteria.limit || 10;
     const skip = (page - 1) * limit;
 
     const [bookings, total] = await Promise.all([
       this.prisma.meetingBooking.findMany({
-        include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-              displayName: true,
-              role: true,
-            },
-          },
-        },
+        include: MEETING_BOOKING_INCLUDE,
         orderBy: {
           startAt: 'desc',
         },
@@ -126,19 +131,10 @@ export class MeetingBookingService {
     };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<MeetingBookingWithUser> {
     const booking = await this.prisma.meetingBooking.findUnique({
       where: { id },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            displayName: true,
-            role: true,
-          },
-        },
-      },
+      include: MEETING_BOOKING_INCLUDE,
     });
 
     if (!booking) {
@@ -148,12 +144,12 @@ export class MeetingBookingService {
     return booking;
   }
 
-  async update(id: string, updateMeetingBookingDto: UpdateMeetingBookingDto) {
-    const booking = await this.prisma.meetingBooking.findUnique({
+  async update(id: string, updateMeetingBookingDto: UpdateMeetingBookingDto): Promise<MeetingBookingWithUser> {
+    const existingBooking = await this.prisma.meetingBooking.findUnique({
       where: { id },
     });
 
-    if (!booking) {
+    if (!existingBooking) {
       throw new NotFoundException('Meeting booking not found');
     }
 
@@ -188,11 +184,11 @@ export class MeetingBookingService {
     const startAt =
       updateMeetingBookingDto.startAt !== undefined
         ? new Date(updateMeetingBookingDto.startAt)
-        : booking.startAt;
+        : existingBooking.startAt;
     const endAt =
       updateMeetingBookingDto.endAt !== undefined
         ? new Date(updateMeetingBookingDto.endAt)
-        : booking.endAt;
+        : existingBooking.endAt;
 
     if (Number.isNaN(startAt.getTime()) || Number.isNaN(endAt.getTime())) {
       throw new BadRequestException('Invalid startAt or endAt');
@@ -205,7 +201,7 @@ export class MeetingBookingService {
     const tableName =
       updateMeetingBookingDto.tableName !== undefined
         ? updateMeetingBookingDto.tableName
-        : booking.tableName;
+        : existingBooking.tableName;
 
     const shouldCheckOverlap =
       updateMeetingBookingDto.tableName !== undefined ||
@@ -227,13 +223,7 @@ export class MeetingBookingService {
       }
     }
 
-    const data: {
-      tableName?: string;
-      startAt?: Date;
-      endAt?: Date;
-      purpose?: string;
-      attendees?: number;
-    } = {};
+    const data: Prisma.MeetingBookingUpdateInput = {};
 
     if (updateMeetingBookingDto.tableName !== undefined) {
       data.tableName = updateMeetingBookingDto.tableName;
@@ -254,20 +244,11 @@ export class MeetingBookingService {
     return this.prisma.meetingBooking.update({
       where: { id },
       data,
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            displayName: true,
-            role: true,
-          },
-        },
-      },
+      include: MEETING_BOOKING_INCLUDE,
     });
   }
 
-  async remove(id: string, userId: string) {
+  async remove(id: string, userId: string): Promise<MeetingBookingWithUser> {
     if (!userId) {
       throw new BadRequestException('userId is required');
     }
@@ -299,16 +280,7 @@ export class MeetingBookingService {
 
     return this.prisma.meetingBooking.delete({
       where: { id },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            displayName: true,
-            role: true,
-          },
-        },
-      },
+      include: MEETING_BOOKING_INCLUDE,
     });
   }
 }
