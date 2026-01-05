@@ -14,10 +14,17 @@ CREATE TABLE "meeting_bookings" (
 );
 
 -- CreateIndex
+<<<<<<< HEAD
 CREATE INDEX "meeting_bookings_user_id_start_at_idx" ON "meeting_bookings"("user_id", "start_at" DESC);
 
 -- CreateIndex
 CREATE INDEX "meeting_bookings_table_name_start_at_idx" ON "meeting_bookings"("table_name", "start_at" DESC);
+=======
+CREATE INDEX "meeting_bookings_table_name_start_at_idx" ON "meeting_bookings"("table_name", "start_at" DESC);
+
+-- CreateIndex
+CREATE INDEX "meeting_bookings_user_id_start_at_idx" ON "meeting_bookings"("user_id", "start_at" DESC);
+>>>>>>> origin/feature/room-booking
 
 -- AddForeignKey
 ALTER TABLE "meeting_bookings" ADD CONSTRAINT "meeting_bookings_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
