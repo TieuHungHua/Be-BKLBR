@@ -22,6 +22,20 @@ import { CreateMeetingBookingDto } from './dto/create-meeting-booking.dto';
 import { MeetingBookingsCriteriaDto } from './dto/meeting-bookings-criteria.dto';
 import { MeetingBookingResponseDto } from './dto/meeting-booking-response.dto';
 import { UpdateMeetingBookingDto } from './dto/update-meeting-booking.dto';
+import { Prisma } from '@prisma/client';
+
+type MeetingBookingWithUser = Prisma.MeetingBookingLegacyGetPayload<{
+  include: {
+    user: {
+      select: {
+        id: true;
+        username: true;
+        displayName: true;
+        role: true;
+      };
+    };
+  };
+}>;
 
 @ApiTags('meeting-bookings')
 @Controller('meeting-bookings')
@@ -38,7 +52,7 @@ export class MeetingBookingController {
   })
   @ApiResponse({ status: 400, description: 'Invalid data or time slot conflict' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async create(@Body() createMeetingBookingDto: CreateMeetingBookingDto): Promise<MeetingBookingResponseDto> {
+  async create(@Body() createMeetingBookingDto: CreateMeetingBookingDto): Promise<MeetingBookingWithUser> {
     return this.meetingBookingService.create(createMeetingBookingDto);
   }
 
@@ -70,7 +84,7 @@ export class MeetingBookingController {
     },
   })
   async findAll(@Query() criteria: MeetingBookingsCriteriaDto): Promise<{
-    data: MeetingBookingResponseDto[];
+    data: MeetingBookingWithUser[];
     criteria: {
       page: number;
       limit: number;
@@ -91,7 +105,7 @@ export class MeetingBookingController {
     type: MeetingBookingResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Meeting booking not found' })
-  async findOne(@Param('id') id: string): Promise<MeetingBookingResponseDto> {
+  async findOne(@Param('id') id: string): Promise<MeetingBookingWithUser> {
     return this.meetingBookingService.findOne(id);
   }
 
@@ -109,7 +123,7 @@ export class MeetingBookingController {
   async update(
     @Param('id') id: string,
     @Body() updateMeetingBookingDto: UpdateMeetingBookingDto,
-  ): Promise<MeetingBookingResponseDto> {
+  ): Promise<MeetingBookingWithUser> {
     return this.meetingBookingService.update(id, updateMeetingBookingDto);
   }
 
@@ -124,7 +138,7 @@ export class MeetingBookingController {
     type: MeetingBookingResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Meeting booking or user not found' })
-  async remove(@Param('id') id: string, @Query('userId') userId: string): Promise<MeetingBookingResponseDto> {
+  async remove(@Param('id') id: string, @Query('userId') userId: string): Promise<MeetingBookingWithUser> {
     return this.meetingBookingService.remove(id, userId);
   }
 }

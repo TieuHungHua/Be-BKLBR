@@ -10,11 +10,8 @@ import { BookModule } from './book/book.module';
 import { BorrowModule } from './borrow/borrow.module';
 import { RewardModule } from './reward/reward.module';
 import { UserModule } from './user/user.module';
-<<<<<<< HEAD
 import { MeetingBookingModule } from './meeting-booking/meeting-booking.module';
-=======
 import { MeetingRoomModule } from './meeting-room/meeting-room.module';
->>>>>>> origin/feature/room-booking
 
 @Module({
   imports: [

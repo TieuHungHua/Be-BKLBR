@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateMeetingBookingDto } from './dto/create-meeting-booking.dto';
 import { MeetingBookingsCriteriaDto } from './dto/meeting-bookings-criteria.dto';
 import { UpdateMeetingBookingDto } from './dto/update-meeting-booking.dto';
+import { randomUUID } from 'crypto';
 
 const MEETING_BOOKING_INCLUDE = {
   user: {
@@ -21,13 +22,13 @@ const MEETING_BOOKING_INCLUDE = {
   },
 } as const;
 
-type MeetingBookingWithUser = Prisma.MeetingBookingGetPayload<{
+type MeetingBookingWithUser = Prisma.MeetingBookingLegacyGetPayload<{
   include: typeof MEETING_BOOKING_INCLUDE;
 }>;
 
 @Injectable()
 export class MeetingBookingService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   private ensureRoleAllowed(role: UserRole) {
     const allowedRoles: UserRole[] = [
@@ -70,7 +71,7 @@ export class MeetingBookingService {
       throw new BadRequestException('endAt must be after startAt');
     }
 
-    const overlap = await this.prisma.meetingBooking.findFirst({
+    const overlap = await this.prisma.meetingBookingLegacy.findFirst({
       where: {
         tableName: createMeetingBookingDto.tableName,
         startAt: { lt: endAt },
@@ -82,14 +83,16 @@ export class MeetingBookingService {
       throw new BadRequestException('Time slot already booked');
     }
 
-    return this.prisma.meetingBooking.create({
+    return this.prisma.meetingBookingLegacy.create({
       data: {
+        id: randomUUID(),
         userId: user.id,
         tableName: createMeetingBookingDto.tableName,
         startAt,
         endAt,
         purpose: createMeetingBookingDto.purpose,
         attendees: createMeetingBookingDto.attendees,
+        updatedAt: new Date(),
       },
       include: MEETING_BOOKING_INCLUDE,
     });
@@ -109,7 +112,7 @@ export class MeetingBookingService {
     const skip = (page - 1) * limit;
 
     const [bookings, total] = await Promise.all([
-      this.prisma.meetingBooking.findMany({
+      this.prisma.meetingBookingLegacy.findMany({
         include: MEETING_BOOKING_INCLUDE,
         orderBy: {
           startAt: 'desc',
@@ -117,7 +120,7 @@ export class MeetingBookingService {
         skip,
         take: limit,
       }),
-      this.prisma.meetingBooking.count(),
+      this.prisma.meetingBookingLegacy.count(),
     ]);
 
     return {
@@ -132,7 +135,7 @@ export class MeetingBookingService {
   }
 
   async findOne(id: string): Promise<MeetingBookingWithUser> {
-    const booking = await this.prisma.meetingBooking.findUnique({
+    const booking = await this.prisma.meetingBookingLegacy.findUnique({
       where: { id },
       include: MEETING_BOOKING_INCLUDE,
     });
@@ -145,7 +148,7 @@ export class MeetingBookingService {
   }
 
   async update(id: string, updateMeetingBookingDto: UpdateMeetingBookingDto): Promise<MeetingBookingWithUser> {
-    const existingBooking = await this.prisma.meetingBooking.findUnique({
+    const existingBooking = await this.prisma.meetingBookingLegacy.findUnique({
       where: { id },
     });
 
@@ -209,7 +212,7 @@ export class MeetingBookingService {
       updateMeetingBookingDto.endAt !== undefined;
 
     if (shouldCheckOverlap) {
-      const overlap = await this.prisma.meetingBooking.findFirst({
+      const overlap = await this.prisma.meetingBookingLegacy.findFirst({
         where: {
           id: { not: id },
           tableName,
@@ -223,7 +226,7 @@ export class MeetingBookingService {
       }
     }
 
-    const data: Prisma.MeetingBookingUpdateInput = {};
+    const data: Prisma.MeetingBookingLegacyUpdateInput = {};
 
     if (updateMeetingBookingDto.tableName !== undefined) {
       data.tableName = updateMeetingBookingDto.tableName;
@@ -241,7 +244,7 @@ export class MeetingBookingService {
       data.attendees = updateMeetingBookingDto.attendees;
     }
 
-    return this.prisma.meetingBooking.update({
+    return this.prisma.meetingBookingLegacy.update({
       where: { id },
       data,
       include: MEETING_BOOKING_INCLUDE,
@@ -270,7 +273,7 @@ export class MeetingBookingService {
     // Keep role check in place while the endpoint is public.
     this.ensureRoleAllowed(user.role);
 
-    const booking = await this.prisma.meetingBooking.findUnique({
+    const booking = await this.prisma.meetingBookingLegacy.findUnique({
       where: { id },
     });
 
@@ -278,7 +281,7 @@ export class MeetingBookingService {
       throw new NotFoundException('Meeting booking not found');
     }
 
-    return this.prisma.meetingBooking.delete({
+    return this.prisma.meetingBookingLegacy.delete({
       where: { id },
       include: MEETING_BOOKING_INCLUDE,
     });

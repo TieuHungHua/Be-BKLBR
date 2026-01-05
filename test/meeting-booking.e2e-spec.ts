@@ -76,7 +76,7 @@ describe('MeetingBooking (e2e)', () => {
 
   afterAll(async () => {
     if (prisma && userId) {
-      await prisma.meetingBooking.deleteMany({ where: { userId } });
+      await prisma.meetingBookingLegacy.deleteMany({ where: { userId } });
       await prisma.user.delete({ where: { id: userId } });
     }
 
