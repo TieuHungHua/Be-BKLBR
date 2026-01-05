@@ -35,15 +35,25 @@ export class BookService {
       coverImageUrl = createBookDto.coverImageUrl;
     }
 
-    return this.prisma.book.create({
+    const book = await this.prisma.book.create({
       data: {
         title: createBookDto.title,
         author: createBookDto.author,
         categories: createBookDto.categories || [],
         coverImage: coverImageUrl,
+        description: createBookDto.description || null,
+        publisher: createBookDto.publisher || null,
+        publicationYear: createBookDto.publicationYear || null,
+        pages: createBookDto.pages || null,
         availableCopies: createBookDto.availableCopies || 0,
       },
     });
+
+    // Thêm trường status
+    return {
+      ...book,
+      status: book.availableCopies > 0 ? 'có sẵn' : 'không có sẵn',
+    };
   }
 
   async findAll(query: BooksQueryDto) {
@@ -98,8 +108,14 @@ export class BookService {
 
     const totalPages = Math.ceil(total / limit);
 
+    // Thêm trường status cho mỗi sách
+    const booksWithStatus = books.map(book => ({
+      ...book,
+      status: book.availableCopies > 0 ? 'có sẵn' : 'không có sẵn',
+    }));
+
     return {
-      data: books,
+      data: booksWithStatus,
       pagination: {
         page,
         limit,
@@ -133,28 +149,43 @@ export class BookService {
       throw new NotFoundException('Sách không tồn tại');
     }
 
-    return book;
+    // Thêm trường status
+    return {
+      ...book,
+      status: book.availableCopies > 0 ? 'có sẵn' : 'không có sẵn',
+    };
   }
 
   async update(id: string, updateBookDto: UpdateBookDto) {
-    const book = await this.prisma.book.findUnique({
+    // Kiểm tra sách có tồn tại không
+    const existingBook = await this.prisma.book.findUnique({
       where: { id },
     });
 
-    if (!book) {
+    if (!existingBook) {
       throw new NotFoundException('Sách không tồn tại');
     }
 
-    return this.prisma.book.update({
+    const book = await this.prisma.book.update({
       where: { id },
       data: {
         ...(updateBookDto.title && { title: updateBookDto.title }),
         ...(updateBookDto.author && { author: updateBookDto.author }),
         ...(updateBookDto.categories !== undefined && { categories: updateBookDto.categories }),
         ...(updateBookDto.coverImage !== undefined && { coverImage: updateBookDto.coverImage }),
+        ...(updateBookDto.description !== undefined && { description: updateBookDto.description }),
+        ...(updateBookDto.publisher !== undefined && { publisher: updateBookDto.publisher }),
+        ...(updateBookDto.publicationYear !== undefined && { publicationYear: updateBookDto.publicationYear }),
+        ...(updateBookDto.pages !== undefined && { pages: updateBookDto.pages }),
         ...(updateBookDto.availableCopies !== undefined && { availableCopies: updateBookDto.availableCopies }),
       },
     });
+
+    // Thêm trường status
+    return {
+      ...book,
+      status: book.availableCopies > 0 ? 'có sẵn' : 'không có sẵn',
+    };
   }
 
   async remove(id: string) {

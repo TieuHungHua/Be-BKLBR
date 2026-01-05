@@ -61,6 +61,59 @@ export class CreateBookDto {
   @Min(0, { message: 'Số lượng bản sao không được âm' })
   @IsOptional()
   availableCopies?: number;
+
+  @ApiProperty({ 
+    example: 'Một cuốn sách về lập trình sạch và best practices trong phát triển phần mềm.', 
+    description: 'Mô tả sách',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @ApiProperty({ 
+    example: 'Scribner', 
+    description: 'Nhà xuất bản',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  publisher?: string;
+
+  @ApiProperty({ 
+    example: 2014, 
+    description: 'Năm xuất bản',
+    minimum: 1000,
+    maximum: 9999,
+    required: false,
+  })
+  @Transform(({ value }) => {
+    if (value === undefined || value === null || value === '') return undefined;
+    const num = typeof value === 'string' ? parseInt(value, 10) : Number(value);
+    return isNaN(num) ? undefined : num;
+  })
+  @Type(() => Number)
+  @IsInt({ message: 'Năm xuất bản phải là số nguyên' })
+  @Min(1000, { message: 'Năm xuất bản phải từ 1000 trở lên' })
+  @IsOptional()
+  publicationYear?: number;
+
+  @ApiProperty({ 
+    example: 531, 
+    description: 'Số trang',
+    minimum: 1,
+    required: false,
+  })
+  @Transform(({ value }) => {
+    if (value === undefined || value === null || value === '') return undefined;
+    const num = typeof value === 'string' ? parseInt(value, 10) : Number(value);
+    return isNaN(num) ? undefined : num;
+  })
+  @Type(() => Number)
+  @IsInt({ message: 'Số trang phải là số nguyên' })
+  @Min(1, { message: 'Số trang phải lớn hơn 0' })
+  @IsOptional()
+  pages?: number;
 }
 
 
