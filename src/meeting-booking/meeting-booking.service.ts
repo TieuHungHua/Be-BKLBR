@@ -28,7 +28,7 @@ type MeetingBookingWithUser = Prisma.MeetingBookingLegacyGetPayload<{
 
 @Injectable()
 export class MeetingBookingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   private ensureRoleAllowed(role: UserRole) {
     const allowedRoles: UserRole[] = [
