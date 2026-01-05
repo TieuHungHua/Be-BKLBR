@@ -49,6 +49,22 @@ enum RedeemStatus {
   delivered
 }
 
+enum RoomBookingStatus {
+  pending
+  approved
+  completed
+  cancelled
+}
+
+enum RoomResourceType {
+  projector
+  whiteboard
+  tv
+  speakerphone
+  microphone
+  other
+}
+
 // Models
 model User {
   id          String   @id @default(uuid())
@@ -78,6 +94,10 @@ model User {
   pointTransactions PointTransaction[]
   redeems           Redeem[]
   activities        Activity[]
+  meetingBookings   MeetingBookingLegacy[]
+  roomBookings      RoomBooking[] @relation("RoomBookingUser")
+  approvedBookings  RoomBooking[] @relation("RoomBookingApprover")
+  cancelledBookings RoomBooking[] @relation("RoomBookingCanceller")
 
   @@index([role])
   @@map("users")
@@ -89,6 +109,10 @@ model Book {
   author          String
   categories      String[] @default([])
   coverImage      String?  @map("cover_image") // URL ảnh bìa từ Cloudinary
+  description     String?
+  pages           Int?
+  publicationYear Int?     @map("publication_year")
+  publisher       String?
   availableCopies Int      @default(0) @map("available_copies")
 
   // Counters
@@ -235,4 +259,80 @@ model Activity {
   @@index([userId, createdAt(sort: Desc)])
   @@index([eventType, createdAt(sort: Desc)])
   @@map("activities")
+}
+
+model MeetingBookingLegacy {
+  id        String   @id
+  userId    String   @map("user_id")
+  tableName String   @map("table_name")
+  startAt   DateTime @map("start_at")
+  endAt     DateTime @map("end_at")
+  purpose   String?
+  attendees Int?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tableName, startAt(sort: Desc)])
+  @@index([userId, startAt(sort: Desc)])
+  @@map("meeting_bookings")
+}
+
+model MeetingRoom {
+  id        String   @id @default(uuid())
+  name      String
+  capacity  Int
+  imageUrl  String?  @map("image_url")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  resources RoomResource[]
+  bookings  RoomBooking[]
+
+  @@index([isActive])
+  @@index([name])
+  @@map("meeting_rooms")
+}
+
+model RoomResource {
+  id        String           @id @default(uuid())
+  roomId    String           @map("room_id")
+  type      RoomResourceType
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  room MeetingRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+  @@index([type])
+  @@map("room_resources")
+}
+
+model RoomBooking {
+  id            String            @id @default(uuid())
+  roomId        String            @map("room_id")
+  userId        String            @map("user_id")
+  startAt       DateTime          @map("start_at")
+  endAt         DateTime          @map("end_at")
+  purpose       String
+  attendeeCount Int               @map("attendee_count")
+  status        RoomBookingStatus @default(pending)
+  approvedBy    String?           @map("approved_by")
+  approvedAt    DateTime?         @map("approved_at")
+  cancelledBy   String?           @map("cancelled_by")
+  cancelledAt   DateTime?         @map("cancelled_at")
+  cancelReason  String?           @map("cancel_reason")
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+
+  room      MeetingRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user      User        @relation("RoomBookingUser", fields: [userId], references: [id], onDelete: Cascade)
+  approver  User?       @relation("RoomBookingApprover", fields: [approvedBy], references: [id], onDelete: SetNull)
+  canceller User?       @relation("RoomBookingCanceller", fields: [cancelledBy], references: [id], onDelete: SetNull)
+
+  @@index([roomId, startAt, endAt])
+  @@index([userId, startAt])
+  @@index([status, startAt])
+  @@map("room_bookings")
 }

@@ -87,6 +87,9 @@ async function bootstrap() {
     .addTag('borrows', 'Borrow management endpoints')
     .addTag('rewards', 'Reward management endpoints')
     .addTag('users', 'User management endpoints')
+    .addTag('rooms', 'Meeting room endpoints')
+    .addTag('bookings', 'Meeting room booking endpoints')
+    .addTag('admin-bookings', 'Admin booking endpoints')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

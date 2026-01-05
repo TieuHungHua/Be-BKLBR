@@ -10,6 +10,7 @@ import { BookModule } from './book/book.module';
 import { BorrowModule } from './borrow/borrow.module';
 import { RewardModule } from './reward/reward.module';
 import { UserModule } from './user/user.module';
+import { MeetingRoomModule } from './meeting-room/meeting-room.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { UserModule } from './user/user.module';
     BorrowModule,
     RewardModule,
     UserModule,
+    MeetingRoomModule,
   ],
   controllers: [AppController],
   providers: [AppService],
