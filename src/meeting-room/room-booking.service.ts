@@ -463,15 +463,14 @@ export class RoomBookingService {
       const sortField: string = sort.field;
       const field = this.mapSortField(sortField);
       if (!field) {
-        throw new BadRequestException(`Unsupported sort field: ${String(sortField)}`);
+        throw new BadRequestException(`Unsupported sort field: ${sortField}`);
       }
       const direction = sort.dir === SortDirection.ASC ? 'asc' : 'desc';
-      const fieldKey: string = field;
-      return { [fieldKey]: direction };
+      return { [field]: direction };
     });
   }
 
-  private mapSortField(field: string) {
+  private mapSortField(field: string): string | null {
     switch (field) {
       case 'start_at':
         return 'startAt';
