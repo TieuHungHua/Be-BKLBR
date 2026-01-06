@@ -11,43 +11,27 @@ export class UserResponseDto {
   @ApiProperty({ example: 'Test User', description: 'Tên hiển thị' })
   displayName: string;
 
-  @ApiProperty({
-    example: 'user@example.com',
-    description: 'Email',
-    nullable: true,
-  })
+  @ApiProperty({ example: 'user@example.com', description: 'Email', nullable: true })
   email: string | null;
 
-  @ApiProperty({
-    example: '0123456789',
-    description: 'Số điện thoại',
-    nullable: true,
-  })
+  @ApiProperty({ example: '0123456789', description: 'Số điện thoại', nullable: true })
   phone: string | null;
 
-  @ApiProperty({
-    example: 'SV001',
-    description: 'Mã sinh viên',
-    nullable: true,
-  })
+  @ApiProperty({ example: 'SV001', description: 'Mã sinh viên', nullable: true })
   studentId: string | null;
 
-  @ApiProperty({
-    example: 'CNTT',
-    description: 'Lớp/Chuyên ngành',
-    nullable: true,
-  })
+  @ApiProperty({ example: 'CNTT', description: 'Lớp/Chuyên ngành', nullable: true })
   classMajor: string | null;
 
-  @ApiProperty({
-    example: 'https://cloudinary.com/avatar.jpg',
+  @ApiProperty({ 
+    example: 'https://cloudinary.com/avatar.jpg', 
     description: 'URL avatar',
     nullable: true,
   })
   avatar: string | null;
 
-  @ApiProperty({
-    example: 'student',
+  @ApiProperty({ 
+    example: 'student', 
     description: 'Vai trò',
     enum: UserRole,
   })
@@ -68,9 +52,15 @@ export class UserResponseDto {
   @ApiProperty({ example: 100, description: 'Điểm hoạt động' })
   activityScore: number;
 
-  @ApiProperty({
-    example: '2024-01-01T00:00:00.000Z',
-    description: 'Thời gian tạo',
-  })
+  @ApiProperty({ example: '2024-01-01T00:00:00.000Z', description: 'Thời gian tạo' })
   createdAt: Date;
 }
+
+
+
+
+
+
+
+
+

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsEnum, IsUrl } from 'class-validator';
+import { IsString, IsOptional, IsEnum } from 'class-validator';
 import { UserRole } from '@prisma/client';
 
 export class UpdateUserDto {
@@ -11,16 +11,6 @@ export class UpdateUserDto {
   @IsString()
   @IsOptional()
   displayName?: string;
-
-  @ApiProperty({
-    example: 'https://res.cloudinary.com/...',
-    description: 'URL avatar',
-    required: false,
-  })
-  @IsString()
-  @IsUrl({}, { message: 'URL avatar không hợp lệ' })
-  @IsOptional()
-  avatar?: string;
 
   @ApiProperty({
     example: 'CNTT',

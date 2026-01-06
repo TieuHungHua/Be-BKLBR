@@ -10,6 +10,8 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -18,7 +20,11 @@ import {
   ApiBearerAuth,
   ApiParam,
   ApiQuery,
+  ApiConsumes,
+  ApiBody,
 } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -55,11 +61,7 @@ export class UserController {
   @ApiOperation({ summary: 'Lấy danh sách người dùng' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({
-    name: 'role',
-    required: false,
-    enum: ['student', 'admin', 'lecturer'],
-  })
+  @ApiQuery({ name: 'role', required: false, enum: ['student', 'admin', 'lecturer'] })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiResponse({
     status: 200,
@@ -108,7 +110,33 @@ export class UserController {
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Cập nhật thông tin người dùng' })
+  @ApiConsumes('multipart/form-data')
   @ApiParam({ name: 'id', description: 'ID của người dùng' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        displayName: {
+          type: 'string',
+          description: 'Tên hiển thị',
+        },
+        classMajor: {
+          type: 'string',
+          description: 'Lớp/Chuyên ngành',
+        },
+        role: {
+          type: 'string',
+          enum: ['student', 'admin', 'lecturer'],
+          description: 'Vai trò',
+        },
+        avatar: {
+          type: 'string',
+          format: 'binary',
+          description: 'File ảnh avatar (jpg, jpeg, png, gif, webp, max 10MB)',
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: 'Cập nhật thành công',
@@ -117,8 +145,29 @@ export class UserController {
   @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ' })
   @ApiResponse({ status: 401, description: 'Chưa đăng nhập' })
   @ApiResponse({ status: 404, description: 'Người dùng không tồn tại' })
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(id, updateUserDto);
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      storage: memoryStorage(),
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB
+      },
+      fileFilter: (req, file, cb) => {
+        if (file && !file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
+          return cb(
+            new Error('Chỉ chấp nhận file ảnh (jpg, jpeg, png, gif, webp)'),
+            false,
+          );
+        }
+        cb(null, true);
+      },
+    }),
+  )
+  async update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @UploadedFile() avatar?: Express.Multer.File,
+  ) {
+    return this.userService.update(id, updateUserDto, avatar);
   }
 
   @Delete(':id')
@@ -132,13 +181,19 @@ export class UserController {
     description: 'Xóa thành công',
     type: UserResponseDto,
   })
-  @ApiResponse({
-    status: 400,
-    description: 'Không thể xóa người dùng đang mượn sách',
-  })
+  @ApiResponse({ status: 400, description: 'Không thể xóa người dùng đang mượn sách' })
   @ApiResponse({ status: 401, description: 'Chưa đăng nhập' })
   @ApiResponse({ status: 404, description: 'Người dùng không tồn tại' })
   async remove(@Param('id') id: string) {
     return this.userService.remove(id);
   }
 }
+
+
+
+
+
+
+
+
+

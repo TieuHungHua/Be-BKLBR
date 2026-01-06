@@ -41,3 +41,12 @@ export class RewardsQueryDto {
   @IsBoolean()
   active?: boolean;
 }
+
+
+
+
+
+
+
+
+

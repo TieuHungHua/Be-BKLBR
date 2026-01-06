@@ -41,10 +41,7 @@ export class BorrowController {
     description: 'Mượn sách thành công',
     type: BorrowResponseDto,
   })
-  @ApiResponse({
-    status: 400,
-    description: 'Dữ liệu không hợp lệ hoặc sách không còn',
-  })
+  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ hoặc sách không còn' })
   @ApiResponse({ status: 401, description: 'Chưa đăng nhập' })
   @ApiResponse({ status: 404, description: 'Sách không tồn tại' })
   async create(
@@ -59,11 +56,7 @@ export class BorrowController {
   @ApiOperation({ summary: 'Lấy danh sách lịch sử mượn' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({
-    name: 'status',
-    required: false,
-    enum: ['active', 'returned', 'overdue'],
-  })
+  @ApiQuery({ name: 'status', required: false, enum: ['active', 'returned', 'overdue'] })
   @ApiResponse({
     status: 200,
     description: 'Lấy danh sách thành công',
@@ -104,7 +97,10 @@ export class BorrowController {
   })
   @ApiResponse({ status: 403, description: 'Không có quyền xem' })
   @ApiResponse({ status: 404, description: 'Lịch sử mượn không tồn tại' })
-  async findOne(@Param('id') id: string, @CurrentUser() user: CurrentUserType) {
+  async findOne(
+    @Param('id') id: string,
+    @CurrentUser() user: CurrentUserType,
+  ) {
     return this.borrowService.findOne(id, user.id);
   }
 
@@ -139,7 +135,19 @@ export class BorrowController {
   @ApiResponse({ status: 400, description: 'Chỉ có thể xóa lịch sử đã trả' })
   @ApiResponse({ status: 403, description: 'Không có quyền xóa' })
   @ApiResponse({ status: 404, description: 'Lịch sử mượn không tồn tại' })
-  async remove(@Param('id') id: string, @CurrentUser() user: CurrentUserType) {
+  async remove(
+    @Param('id') id: string,
+    @CurrentUser() user: CurrentUserType,
+  ) {
     return this.borrowService.remove(id, user.id);
   }
 }
+
+
+
+
+
+
+
+
+

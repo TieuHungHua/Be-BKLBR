@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { UploadImageService } from '../upload-image/upload-image.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersQueryDto } from './dto/users-query.dto';
@@ -13,7 +14,10 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private uploadImageService: UploadImageService,
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     // Kiểm tra username đã tồn tại chưa
@@ -173,7 +177,11 @@ export class UserService {
     return user;
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+    avatarFile?: Express.Multer.File,
+  ) {
     const user = await this.prisma.user.findUnique({
       where: { id },
     });
@@ -182,15 +190,41 @@ export class UserService {
       throw new NotFoundException('Người dùng không tồn tại');
     }
 
+    // Upload avatar nếu có file
+    let avatarUrl: string | undefined;
+    if (avatarFile) {
+      const uploadResult = await this.uploadImageService.uploadAvatar(avatarFile);
+      avatarUrl = uploadResult.secureUrl;
+
+      // Xóa avatar cũ nếu có
+      if (user.avatar) {
+        try {
+          // Extract publicId từ Cloudinary URL
+          // URL format: https://res.cloudinary.com/{cloud}/image/upload/v{version}/{folder}/{filename}
+          // PublicId format: {folder}/{filename without extension}
+          const urlParts = user.avatar.split('/');
+          const uploadIndex = urlParts.findIndex((part) => part === 'upload');
+          if (uploadIndex !== -1 && uploadIndex < urlParts.length - 1) {
+            // Lấy phần sau 'upload/v{version}/'
+            const pathAfterUpload = urlParts.slice(uploadIndex + 2).join('/');
+            // Loại bỏ extension
+            const publicId = pathAfterUpload.replace(/\.[^/.]+$/, '');
+            await this.uploadImageService.deleteImage(publicId);
+          }
+        } catch (error) {
+          // Ignore error nếu không xóa được avatar cũ
+          console.warn('Không thể xóa avatar cũ:', error);
+        }
+      }
+    }
+
     return this.prisma.user.update({
       where: { id },
       data: {
         ...(updateUserDto.displayName && {
           displayName: updateUserDto.displayName,
         }),
-        ...(updateUserDto.avatar !== undefined && {
-          avatar: updateUserDto.avatar,
-        }),
+        ...(avatarUrl && { avatar: avatarUrl }),
         ...(updateUserDto.classMajor !== undefined && {
           classMajor: updateUserDto.classMajor,
         }),

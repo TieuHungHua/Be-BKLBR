@@ -7,8 +7,8 @@ export class RewardResponseDto {
   @ApiProperty({ example: 'Voucher 50k', description: 'Tên phần thưởng' })
   name: string;
 
-  @ApiProperty({
-    example: 'Voucher giảm giá 50.000đ',
+  @ApiProperty({ 
+    example: 'Voucher giảm giá 50.000đ', 
     description: 'Mô tả phần thưởng',
     nullable: true,
   })
@@ -23,3 +23,12 @@ export class RewardResponseDto {
   @ApiProperty({ example: true, description: 'Trạng thái hoạt động' })
   active: boolean;
 }
+
+
+
+
+
+
+
+
+
