@@ -11,6 +11,3 @@ import { UploadImageModule } from '../upload-image/upload-image.module';
   exports: [BookService],
 })
 export class BookModule {}
-
-
-

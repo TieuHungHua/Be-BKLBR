@@ -50,9 +50,14 @@ export class MeetingBookingController {
     description: 'Meeting booking created',
     type: MeetingBookingResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Invalid data or time slot conflict' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid data or time slot conflict',
+  })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async create(@Body() createMeetingBookingDto: CreateMeetingBookingDto): Promise<MeetingBookingWithUser> {
+  async create(
+    @Body() createMeetingBookingDto: CreateMeetingBookingDto,
+  ): Promise<MeetingBookingWithUser> {
     return this.meetingBookingService.create(createMeetingBookingDto);
   }
 
@@ -118,8 +123,14 @@ export class MeetingBookingController {
     description: 'Meeting booking updated',
     type: MeetingBookingResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Invalid data or time slot conflict' })
-  @ApiResponse({ status: 404, description: 'Meeting booking or user not found' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid data or time slot conflict',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Meeting booking or user not found',
+  })
   async update(
     @Param('id') id: string,
     @Body() updateMeetingBookingDto: UpdateMeetingBookingDto,
@@ -137,8 +148,14 @@ export class MeetingBookingController {
     description: 'Meeting booking deleted',
     type: MeetingBookingResponseDto,
   })
-  @ApiResponse({ status: 404, description: 'Meeting booking or user not found' })
-  async remove(@Param('id') id: string, @Query('userId') userId: string): Promise<MeetingBookingWithUser> {
+  @ApiResponse({
+    status: 404,
+    description: 'Meeting booking or user not found',
+  })
+  async remove(
+    @Param('id') id: string,
+    @Query('userId') userId: string,
+  ): Promise<MeetingBookingWithUser> {
     return this.meetingBookingService.remove(id, userId);
   }
 }

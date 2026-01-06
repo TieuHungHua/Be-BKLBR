@@ -10,11 +10,3 @@ import { PrismaModule } from '../prisma/prisma.module';
   exports: [RewardService],
 })
 export class RewardModule {}
-
-
-
-
-
-
-
-

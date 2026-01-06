@@ -107,7 +107,10 @@ export class RewardController {
   @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ' })
   @ApiResponse({ status: 401, description: 'Chưa đăng nhập' })
   @ApiResponse({ status: 404, description: 'Phần thưởng không tồn tại' })
-  async update(@Param('id') id: string, @Body() updateRewardDto: UpdateRewardDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateRewardDto: UpdateRewardDto,
+  ) {
     return this.rewardService.update(id, updateRewardDto);
   }
 
@@ -122,18 +125,13 @@ export class RewardController {
     description: 'Xóa thành công',
     type: RewardResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Không thể xóa phần thưởng đang có đơn đổi' })
+  @ApiResponse({
+    status: 400,
+    description: 'Không thể xóa phần thưởng đang có đơn đổi',
+  })
   @ApiResponse({ status: 401, description: 'Chưa đăng nhập' })
   @ApiResponse({ status: 404, description: 'Phần thưởng không tồn tại' })
   async remove(@Param('id') id: string) {
     return this.rewardService.remove(id);
   }
 }
-
-
-
-
-
-
-
-

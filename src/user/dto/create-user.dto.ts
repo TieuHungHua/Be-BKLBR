@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsEmail, IsOptional, IsEnum, Matches } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsEmail,
+  IsOptional,
+  IsEnum,
+  Matches,
+} from 'class-validator';
 import { UserRole } from '@prisma/client';
 
 export class CreateUserDto {
@@ -13,7 +20,11 @@ export class CreateUserDto {
   @IsNotEmpty({ message: 'Email không được để trống' })
   email: string;
 
-  @ApiProperty({ example: '0123456789', description: 'Số điện thoại', required: false })
+  @ApiProperty({
+    example: '0123456789',
+    description: 'Số điện thoại',
+    required: false,
+  })
   @IsString()
   @IsOptional()
   @Matches(/^[0-9]{10,11}$/, {
@@ -26,8 +37,8 @@ export class CreateUserDto {
   @IsNotEmpty({ message: 'Tên hiển thị không được để trống' })
   displayName: string;
 
-  @ApiProperty({ 
-    example: 'https://res.cloudinary.com/...', 
+  @ApiProperty({
+    example: 'https://res.cloudinary.com/...',
     description: 'URL avatar',
     required: false,
   })
@@ -35,13 +46,17 @@ export class CreateUserDto {
   @IsOptional()
   avatar?: string;
 
-  @ApiProperty({ example: 'CNTT', description: 'Lớp/Chuyên ngành', required: false })
+  @ApiProperty({
+    example: 'CNTT',
+    description: 'Lớp/Chuyên ngành',
+    required: false,
+  })
   @IsString()
   @IsOptional()
   classMajor?: string;
 
-  @ApiProperty({ 
-    example: 'SV001', 
+  @ApiProperty({
+    example: 'SV001',
     description: 'Mã sinh viên (bắt buộc nếu role là student)',
     required: false,
   })
@@ -49,9 +64,9 @@ export class CreateUserDto {
   @IsOptional()
   studentId?: string;
 
-  @ApiProperty({ 
-    enum: UserRole, 
-    example: UserRole.student, 
+  @ApiProperty({
+    enum: UserRole,
+    example: UserRole.student,
     description: 'Vai trò',
     default: UserRole.student,
   })
@@ -64,11 +79,3 @@ export class CreateUserDto {
   @IsNotEmpty({ message: 'Mật khẩu không được để trống' })
   password: string;
 }
-
-
-
-
-
-
-
-

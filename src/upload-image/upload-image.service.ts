@@ -95,13 +95,13 @@ export class UploadImageService {
           error: Error | undefined,
           result:
             | {
-              secure_url: string;
-              public_id: string;
-              width: number;
-              height: number;
-              format: string;
-              bytes: number;
-            }
+                secure_url: string;
+                public_id: string;
+                width: number;
+                height: number;
+                format: string;
+                bytes: number;
+              }
             | undefined,
         ) => {
           if (error) {
@@ -131,9 +131,9 @@ export class UploadImageService {
       } catch (streamError: unknown) {
         const errorMessage =
           streamError &&
-            typeof streamError === 'object' &&
-            'message' in streamError &&
-            typeof streamError.message === 'string'
+          typeof streamError === 'object' &&
+          'message' in streamError &&
+          typeof streamError.message === 'string'
             ? streamError.message
             : 'Failed to create read stream';
         reject(new BadRequestException(`Upload failed: ${errorMessage}`));
@@ -160,9 +160,9 @@ export class UploadImageService {
     } catch (error: unknown) {
       const errorMessage =
         error &&
-          typeof error === 'object' &&
-          'message' in error &&
-          typeof error.message === 'string'
+        typeof error === 'object' &&
+        'message' in error &&
+        typeof error.message === 'string'
           ? error.message
           : 'Unknown error';
       throw new BadRequestException(`Xóa ảnh thất bại: ${errorMessage}`);

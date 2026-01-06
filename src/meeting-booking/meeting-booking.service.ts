@@ -28,7 +28,7 @@ type MeetingBookingWithUser = Prisma.MeetingBookingLegacyGetPayload<{
 
 @Injectable()
 export class MeetingBookingService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   private ensureRoleAllowed(role: UserRole) {
     const allowedRoles: UserRole[] = [
@@ -42,7 +42,9 @@ export class MeetingBookingService {
     }
   }
 
-  async create(createMeetingBookingDto: CreateMeetingBookingDto): Promise<MeetingBookingWithUser> {
+  async create(
+    createMeetingBookingDto: CreateMeetingBookingDto,
+  ): Promise<MeetingBookingWithUser> {
     const user = await this.prisma.user.findUnique({
       where: { id: createMeetingBookingDto.userId },
       select: {
@@ -147,7 +149,10 @@ export class MeetingBookingService {
     return booking;
   }
 
-  async update(id: string, updateMeetingBookingDto: UpdateMeetingBookingDto): Promise<MeetingBookingWithUser> {
+  async update(
+    id: string,
+    updateMeetingBookingDto: UpdateMeetingBookingDto,
+  ): Promise<MeetingBookingWithUser> {
     const existingBooking = await this.prisma.meetingBookingLegacy.findUnique({
       where: { id },
     });

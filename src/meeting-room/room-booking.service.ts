@@ -44,7 +44,7 @@ type BookingWithRelations = Prisma.RoomBookingGetPayload<{
 
 @Injectable()
 export class RoomBookingService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async createBooking(user: CurrentUserType, dto: CreateBookingDto) {
     const startAt = new Date(dto.start_at);
@@ -275,7 +275,10 @@ export class RoomBookingService {
     if (ownerId === currentUser.id) {
       return true;
     }
-    return currentUser.role === UserRole.admin || currentUser.role === UserRole.lecturer;
+    return (
+      currentUser.role === UserRole.admin ||
+      currentUser.role === UserRole.lecturer
+    );
   }
 
   private assertOneHourSlot(startAt: Date, endAt: Date) {
@@ -337,18 +340,26 @@ export class RoomBookingService {
     for (const filter of filters) {
       const mappedField = this.mapFilterField(filter.field);
       if (!mappedField) {
-        throw new BadRequestException(`Unsupported filter field: ${filter.field}`);
+        throw new BadRequestException(
+          `Unsupported filter field: ${filter.field}`,
+        );
       }
 
       const value = this.coerceFilterValue(mappedField, filter.value);
-      const condition = this.buildFilterCondition(mappedField, filter.op, value);
+      const condition = this.buildFilterCondition(
+        mappedField,
+        filter.op,
+        value,
+      );
       andConditions.push(condition);
     }
 
     return { AND: andConditions };
   }
 
-  private mapFilterField(field: string): keyof Prisma.RoomBookingWhereInput | null {
+  private mapFilterField(
+    field: string,
+  ): keyof Prisma.RoomBookingWhereInput | null {
     switch (field) {
       case 'status':
         return 'status';
@@ -415,7 +426,9 @@ export class RoomBookingService {
 
   private normalizeStatus(status: string): RoomBookingStatus {
     const normalized = status.toLowerCase();
-    if (Object.values(RoomBookingStatus).includes(normalized as RoomBookingStatus)) {
+    if (
+      Object.values(RoomBookingStatus).includes(normalized as RoomBookingStatus)
+    ) {
       return normalized as RoomBookingStatus;
     }
     throw new BadRequestException(`Invalid status: ${status}`);
@@ -432,7 +445,9 @@ export class RoomBookingService {
       case FilterOperator.NE:
         return { [field]: { not: value } } as Prisma.RoomBookingWhereInput;
       case FilterOperator.IN:
-        return { [field]: { in: Array.isArray(value) ? value : [value] } } as Prisma.RoomBookingWhereInput;
+        return {
+          [field]: { in: Array.isArray(value) ? value : [value] },
+        } as Prisma.RoomBookingWhereInput;
       case FilterOperator.GTE:
         return { [field]: { gte: value } } as Prisma.RoomBookingWhereInput;
       case FilterOperator.LTE:
@@ -443,13 +458,15 @@ export class RoomBookingService {
         return { [field]: { lt: value } } as Prisma.RoomBookingWhereInput;
       case FilterOperator.CONTAINS:
         if (field !== 'purpose') {
-          throw new BadRequestException('CONTAINS is only supported for purpose');
+          throw new BadRequestException(
+            'CONTAINS is only supported for purpose',
+          );
         }
         return {
           purpose: { contains: String(value), mode: 'insensitive' },
         } as Prisma.RoomBookingWhereInput;
       default:
-        throw new BadRequestException(`Unsupported operator: ${op}`);
+        throw new BadRequestException('Unsupported operator');
     }
   }
 
@@ -500,7 +517,9 @@ export class RoomBookingService {
       approved_by: booking.approvedBy,
       approved_at: booking.approvedAt ? booking.approvedAt.toISOString() : null,
       cancelled_by: booking.cancelledBy,
-      cancelled_at: booking.cancelledAt ? booking.cancelledAt.toISOString() : null,
+      cancelled_at: booking.cancelledAt
+        ? booking.cancelledAt.toISOString()
+        : null,
       cancel_reason: booking.cancelReason,
       created_at: booking.createdAt.toISOString(),
       updated_at: booking.updatedAt.toISOString(),

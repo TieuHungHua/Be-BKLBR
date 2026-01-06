@@ -17,12 +17,13 @@ interface RequestWithUser {
 export const CurrentUser = createParamDecorator(
   (data: unknown, ctx: ExecutionContext): CurrentUserType => {
     const request = ctx.switchToHttp().getRequest<RequestWithUser>();
-    
+
     if (!request.user) {
-      throw new Error('User not found in request. Make sure JwtAuthGuard is applied.');
+      throw new Error(
+        'User not found in request. Make sure JwtAuthGuard is applied.',
+      );
     }
-    
+
     return request.user;
   },
 );
-

@@ -20,7 +20,8 @@ export class RewardService {
         description: createRewardDto.description || null,
         costPoints: createRewardDto.costPoints,
         stock: createRewardDto.stock || 0,
-        active: createRewardDto.active !== undefined ? createRewardDto.active : true,
+        active:
+          createRewardDto.active !== undefined ? createRewardDto.active : true,
       },
     });
   }
@@ -83,10 +84,18 @@ export class RewardService {
       where: { id },
       data: {
         ...(updateRewardDto.name && { name: updateRewardDto.name }),
-        ...(updateRewardDto.description !== undefined && { description: updateRewardDto.description }),
-        ...(updateRewardDto.costPoints !== undefined && { costPoints: updateRewardDto.costPoints }),
-        ...(updateRewardDto.stock !== undefined && { stock: updateRewardDto.stock }),
-        ...(updateRewardDto.active !== undefined && { active: updateRewardDto.active }),
+        ...(updateRewardDto.description !== undefined && {
+          description: updateRewardDto.description,
+        }),
+        ...(updateRewardDto.costPoints !== undefined && {
+          costPoints: updateRewardDto.costPoints,
+        }),
+        ...(updateRewardDto.stock !== undefined && {
+          stock: updateRewardDto.stock,
+        }),
+        ...(updateRewardDto.active !== undefined && {
+          active: updateRewardDto.active,
+        }),
       },
     });
   }
@@ -114,7 +123,9 @@ export class RewardService {
     }
 
     if (reward._count.redeems > 0) {
-      throw new BadRequestException('Không thể xóa phần thưởng đang có đơn đổi đang xử lý');
+      throw new BadRequestException(
+        'Không thể xóa phần thưởng đang có đơn đổi đang xử lý',
+      );
     }
 
     return this.prisma.reward.delete({
@@ -122,4 +133,3 @@ export class RewardService {
     });
   }
 }
-

@@ -66,7 +66,8 @@ export class BookController {
         coverImage: {
           type: 'string',
           format: 'binary',
-          description: 'File ảnh bìa sách (jpg, jpeg, png, gif, webp, max 10MB). Nếu không có file, có thể gửi URL ảnh trong coverImageUrl',
+          description:
+            'File ảnh bìa sách (jpg, jpeg, png, gif, webp, max 10MB). Nếu không có file, có thể gửi URL ảnh trong coverImageUrl',
         },
         coverImageUrl: {
           type: 'string',
@@ -120,13 +121,50 @@ export class BookController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Lấy danh sách sách với phân trang và tìm kiếm' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Số trang (mặc định: 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Số lượng sách mỗi trang (mặc định: 10, tối đa: 100)' })
-  @ApiQuery({ name: 'search', required: false, type: String, description: 'Tìm kiếm theo tên sách' })
-  @ApiQuery({ name: 'author', required: false, type: String, description: 'Lọc theo tác giả' })
-  @ApiQuery({ name: 'category', required: false, type: String, description: 'Lọc theo danh mục' })
-  @ApiQuery({ name: 'sortBy', required: false, type: String, enum: ['createdAt', 'title', 'author'], description: 'Trường để sắp xếp (mặc định: createdAt)' })
-  @ApiQuery({ name: 'sortOrder', required: false, type: String, enum: ['asc', 'desc'], description: 'Thứ tự sắp xếp (mặc định: desc)' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Số trang (mặc định: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Số lượng sách mỗi trang (mặc định: 10, tối đa: 100)',
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Tìm kiếm theo tên sách',
+  })
+  @ApiQuery({
+    name: 'author',
+    required: false,
+    type: String,
+    description: 'Lọc theo tác giả',
+  })
+  @ApiQuery({
+    name: 'category',
+    required: false,
+    type: String,
+    description: 'Lọc theo danh mục',
+  })
+  @ApiQuery({
+    name: 'sortBy',
+    required: false,
+    type: String,
+    enum: ['createdAt', 'title', 'author'],
+    description: 'Trường để sắp xếp (mặc định: createdAt)',
+  })
+  @ApiQuery({
+    name: 'sortOrder',
+    required: false,
+    type: String,
+    enum: ['asc', 'desc'],
+    description: 'Thứ tự sắp xếp (mặc định: desc)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Lấy danh sách sách thành công',
@@ -198,13 +236,13 @@ export class BookController {
     description: 'Xóa sách thành công',
     type: BookResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Không thể xóa sách đang được mượn' })
+  @ApiResponse({
+    status: 400,
+    description: 'Không thể xóa sách đang được mượn',
+  })
   @ApiResponse({ status: 401, description: 'Chưa đăng nhập' })
   @ApiResponse({ status: 404, description: 'Sách không tồn tại' })
   async remove(@Param('id') id: string) {
     return this.bookService.remove(id);
   }
 }
-
-
-

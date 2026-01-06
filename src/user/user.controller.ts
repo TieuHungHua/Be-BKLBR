@@ -55,7 +55,11 @@ export class UserController {
   @ApiOperation({ summary: 'Lấy danh sách người dùng' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'role', required: false, enum: ['student', 'admin', 'lecturer'] })
+  @ApiQuery({
+    name: 'role',
+    required: false,
+    enum: ['student', 'admin', 'lecturer'],
+  })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiResponse({
     status: 200,
@@ -128,18 +132,13 @@ export class UserController {
     description: 'Xóa thành công',
     type: UserResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Không thể xóa người dùng đang mượn sách' })
+  @ApiResponse({
+    status: 400,
+    description: 'Không thể xóa người dùng đang mượn sách',
+  })
   @ApiResponse({ status: 401, description: 'Chưa đăng nhập' })
   @ApiResponse({ status: 404, description: 'Người dùng không tồn tại' })
   async remove(@Param('id') id: string) {
     return this.userService.remove(id);
   }
 }
-
-
-
-
-
-
-
-

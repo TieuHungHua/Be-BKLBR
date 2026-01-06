@@ -17,8 +17,8 @@ export class MeetingRoomService {
 
     this.assertOneHourSlot(startAt, endAt);
 
-    const page = query.page ?? 1;
-    const pageSize = query.pageSize ?? 20;
+    const page = Number(query.page ?? 1);
+    const pageSize = Number(query.pageSize ?? 20);
     const skip = (page - 1) * pageSize;
 
     const orderBy = this.buildRoomOrderBy(query.sortBy, query.sortDir);
@@ -39,7 +39,9 @@ export class MeetingRoomService {
       ? await this.prisma.roomBooking.findMany({
           where: {
             roomId: { in: roomIds },
-            status: { in: [RoomBookingStatus.pending, RoomBookingStatus.approved] },
+            status: {
+              in: [RoomBookingStatus.pending, RoomBookingStatus.approved],
+            },
             AND: [{ startAt: { lt: endAt } }, { endAt: { gt: startAt } }],
           },
           select: { roomId: true },

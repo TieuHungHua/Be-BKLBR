@@ -46,7 +46,9 @@ export class UserService {
 
     // Kiểm tra nếu là student thì phải có studentId
     if (createUserDto.role === 'student' && !createUserDto.studentId) {
-      throw new BadRequestException('Mã sinh viên là bắt buộc cho tài khoản sinh viên');
+      throw new BadRequestException(
+        'Mã sinh viên là bắt buộc cho tài khoản sinh viên',
+      );
     }
 
     // Hash password
@@ -183,9 +185,15 @@ export class UserService {
     return this.prisma.user.update({
       where: { id },
       data: {
-        ...(updateUserDto.displayName && { displayName: updateUserDto.displayName }),
-        ...(updateUserDto.avatar !== undefined && { avatar: updateUserDto.avatar }),
-        ...(updateUserDto.classMajor !== undefined && { classMajor: updateUserDto.classMajor }),
+        ...(updateUserDto.displayName && {
+          displayName: updateUserDto.displayName,
+        }),
+        ...(updateUserDto.avatar !== undefined && {
+          avatar: updateUserDto.avatar,
+        }),
+        ...(updateUserDto.classMajor !== undefined && {
+          classMajor: updateUserDto.classMajor,
+        }),
         ...(updateUserDto.role !== undefined && { role: updateUserDto.role }),
       },
       select: {
@@ -254,4 +262,3 @@ export class UserService {
     });
   }
 }
-

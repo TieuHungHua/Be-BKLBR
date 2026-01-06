@@ -1,19 +1,34 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsArray, IsOptional, IsInt, Min, IsUrl } from 'class-validator';
+import {
+  IsString,
+  IsArray,
+  IsOptional,
+  IsInt,
+  Min,
+  IsUrl,
+} from 'class-validator';
 
 export class UpdateBookDto {
-  @ApiProperty({ example: 'Clean Code', description: 'Tên sách', required: false })
+  @ApiProperty({
+    example: 'Clean Code',
+    description: 'Tên sách',
+    required: false,
+  })
   @IsString()
   @IsOptional()
   title?: string;
 
-  @ApiProperty({ example: 'Robert C. Martin', description: 'Tác giả', required: false })
+  @ApiProperty({
+    example: 'Robert C. Martin',
+    description: 'Tác giả',
+    required: false,
+  })
   @IsString()
   @IsOptional()
   author?: string;
 
-  @ApiProperty({ 
-    example: ['Programming', 'Software Engineering'], 
+  @ApiProperty({
+    example: ['Programming', 'Software Engineering'],
     description: 'Danh mục sách',
     type: [String],
     required: false,
@@ -23,8 +38,8 @@ export class UpdateBookDto {
   @IsOptional()
   categories?: string[];
 
-  @ApiProperty({ 
-    example: 'https://res.cloudinary.com/...', 
+  @ApiProperty({
+    example: 'https://res.cloudinary.com/...',
     description: 'URL ảnh bìa từ Cloudinary',
     required: false,
   })
@@ -33,8 +48,8 @@ export class UpdateBookDto {
   @IsOptional()
   coverImage?: string;
 
-  @ApiProperty({ 
-    example: 5, 
+  @ApiProperty({
+    example: 5,
     description: 'Số lượng bản sao có sẵn',
     minimum: 0,
     required: false,
@@ -44,8 +59,9 @@ export class UpdateBookDto {
   @IsOptional()
   availableCopies?: number;
 
-  @ApiProperty({ 
-    example: 'Một cuốn sách về lập trình sạch và best practices trong phát triển phần mềm.', 
+  @ApiProperty({
+    example:
+      'Một cuốn sách về lập trình sạch và best practices trong phát triển phần mềm.',
     description: 'Mô tả sách',
     required: false,
   })
@@ -53,8 +69,8 @@ export class UpdateBookDto {
   @IsOptional()
   description?: string;
 
-  @ApiProperty({ 
-    example: 'Scribner', 
+  @ApiProperty({
+    example: 'Scribner',
     description: 'Nhà xuất bản',
     required: false,
   })
@@ -62,8 +78,8 @@ export class UpdateBookDto {
   @IsOptional()
   publisher?: string;
 
-  @ApiProperty({ 
-    example: 2014, 
+  @ApiProperty({
+    example: 2014,
     description: 'Năm xuất bản',
     minimum: 1000,
     maximum: 9999,
@@ -74,8 +90,8 @@ export class UpdateBookDto {
   @IsOptional()
   publicationYear?: number;
 
-  @ApiProperty({ 
-    example: 531, 
+  @ApiProperty({
+    example: 531,
     description: 'Số trang',
     minimum: 1,
     required: false,
@@ -85,9 +101,3 @@ export class UpdateBookDto {
   @IsOptional()
   pages?: number;
 }
-
-
-
-
-
-

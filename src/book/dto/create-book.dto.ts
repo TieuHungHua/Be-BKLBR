@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsArray, IsOptional, IsInt, Min, IsUrl } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsArray,
+  IsOptional,
+  IsInt,
+  Min,
+  IsUrl,
+} from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 export class CreateBookDto {
@@ -13,9 +21,10 @@ export class CreateBookDto {
   @IsNotEmpty({ message: 'Tác giả không được để trống' })
   author: string;
 
-  @ApiProperty({ 
-    example: ['Programming', 'Software Engineering'], 
-    description: 'Danh mục sách (có thể gửi dạng array hoặc string comma-separated)',
+  @ApiProperty({
+    example: ['Programming', 'Software Engineering'],
+    description:
+      'Danh mục sách (có thể gửi dạng array hoặc string comma-separated)',
     type: [String],
     required: false,
   })
@@ -26,7 +35,10 @@ export class CreateBookDto {
     }
     if (typeof value === 'string') {
       // Nếu là string, split bằng comma
-      return value.split(',').map((item: string) => item.trim()).filter(Boolean);
+      return value
+        .split(',')
+        .map((item: string) => item.trim())
+        .filter(Boolean);
     }
     return [];
   })
@@ -35,8 +47,8 @@ export class CreateBookDto {
   @IsOptional()
   categories?: string[];
 
-  @ApiProperty({ 
-    example: 'https://res.cloudinary.com/...', 
+  @ApiProperty({
+    example: 'https://res.cloudinary.com/...',
     description: 'URL ảnh bìa từ Cloudinary (nếu không upload file)',
     required: false,
   })
@@ -45,8 +57,8 @@ export class CreateBookDto {
   @IsOptional()
   coverImageUrl?: string;
 
-  @ApiProperty({ 
-    example: 5, 
+  @ApiProperty({
+    example: 5,
     description: 'Số lượng bản sao có sẵn',
     minimum: 0,
     default: 0,
@@ -62,8 +74,9 @@ export class CreateBookDto {
   @IsOptional()
   availableCopies?: number;
 
-  @ApiProperty({ 
-    example: 'Một cuốn sách về lập trình sạch và best practices trong phát triển phần mềm.', 
+  @ApiProperty({
+    example:
+      'Một cuốn sách về lập trình sạch và best practices trong phát triển phần mềm.',
     description: 'Mô tả sách',
     required: false,
   })
@@ -71,8 +84,8 @@ export class CreateBookDto {
   @IsOptional()
   description?: string;
 
-  @ApiProperty({ 
-    example: 'Scribner', 
+  @ApiProperty({
+    example: 'Scribner',
     description: 'Nhà xuất bản',
     required: false,
   })
@@ -80,8 +93,8 @@ export class CreateBookDto {
   @IsOptional()
   publisher?: string;
 
-  @ApiProperty({ 
-    example: 2014, 
+  @ApiProperty({
+    example: 2014,
     description: 'Năm xuất bản',
     minimum: 1000,
     maximum: 9999,
@@ -98,8 +111,8 @@ export class CreateBookDto {
   @IsOptional()
   publicationYear?: number;
 
-  @ApiProperty({ 
-    example: 531, 
+  @ApiProperty({
+    example: 531,
     description: 'Số trang',
     minimum: 1,
     required: false,
@@ -115,6 +128,3 @@ export class CreateBookDto {
   @IsOptional()
   pages?: number;
 }
-
-
-

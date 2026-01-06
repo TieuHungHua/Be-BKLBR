@@ -80,8 +80,3 @@ export class BooksQueryDto {
   @IsString()
   sortOrder?: 'asc' | 'desc' = 'desc';
 }
-
-
-
-
-

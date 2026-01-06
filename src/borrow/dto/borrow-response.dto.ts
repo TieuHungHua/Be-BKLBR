@@ -32,31 +32,29 @@ export class BorrowResponseDto {
   @ApiProperty({ type: BorrowBookDto, description: 'Thông tin sách' })
   book: BorrowBookDto;
 
-  @ApiProperty({ example: '2024-01-01T00:00:00.000Z', description: 'Thời gian mượn' })
+  @ApiProperty({
+    example: '2024-01-01T00:00:00.000Z',
+    description: 'Thời gian mượn',
+  })
   borrowedAt: Date;
 
-  @ApiProperty({ example: '2024-01-15T00:00:00.000Z', description: 'Ngày hết hạn' })
+  @ApiProperty({
+    example: '2024-01-15T00:00:00.000Z',
+    description: 'Ngày hết hạn',
+  })
   dueAt: Date;
 
-  @ApiProperty({ 
-    example: '2024-01-10T00:00:00.000Z', 
+  @ApiProperty({
+    example: '2024-01-10T00:00:00.000Z',
     description: 'Thời gian trả',
     nullable: true,
   })
   returnedAt: Date | null;
 
-  @ApiProperty({ 
-    example: 'active', 
+  @ApiProperty({
+    example: 'active',
     description: 'Trạng thái (active, returned, overdue)',
     enum: ['active', 'returned', 'overdue'],
   })
   status: string;
 }
-
-
-
-
-
-
-
-

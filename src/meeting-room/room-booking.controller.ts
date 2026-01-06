@@ -10,11 +10,20 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
-import { CurrentUser, type CurrentUserType } from '../auth/decorators/current-user.decorator';
+import {
+  CurrentUser,
+  type CurrentUserType,
+} from '../auth/decorators/current-user.decorator';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { BookingSearchCriteriaDto } from './dto/booking-search.dto';
 import { CancelBookingDto } from './dto/cancel-booking.dto';

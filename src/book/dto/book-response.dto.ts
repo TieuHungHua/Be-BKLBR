@@ -10,43 +10,44 @@ export class BookResponseDto {
   @ApiProperty({ example: 'Robert C. Martin', description: 'Tác giả' })
   author: string;
 
-  @ApiProperty({ 
-    example: ['Programming', 'Software Engineering'], 
+  @ApiProperty({
+    example: ['Programming', 'Software Engineering'],
     description: 'Danh mục sách',
     type: [String],
   })
   categories: string[];
 
-  @ApiProperty({ 
-    example: 'https://res.cloudinary.com/...', 
+  @ApiProperty({
+    example: 'https://res.cloudinary.com/...',
     description: 'URL ảnh bìa',
     nullable: true,
   })
   coverImage: string | null;
 
-  @ApiProperty({ 
-    example: 'Một cuốn sách về lập trình sạch và best practices trong phát triển phần mềm.', 
+  @ApiProperty({
+    example:
+      'Một cuốn sách về lập trình sạch và best practices trong phát triển phần mềm.',
     description: 'Mô tả sách',
     nullable: true,
   })
   description: string | null;
 
-  @ApiProperty({ 
-    example: 'Scribner', 
+  @ApiProperty({
+    example: 'Scribner',
     description: 'Nhà xuất bản',
     nullable: true,
   })
   publisher: string | null;
 
-  @ApiProperty({ 
-    example: 2014, 
+  @ApiProperty({
+    example: 2014,
     description: 'Năm xuất bản',
     nullable: true,
   })
   publicationYear: number | null;
 
-  @ApiProperty({ 
-    example: 531, 
+  @ApiProperty({
+    example: 531,
     description: 'Số trang',
     nullable: true,
   })
@@ -55,9 +56,10 @@ export class BookResponseDto {
   @ApiProperty({ example: 5, description: 'Số lượng bản sao có sẵn' })
   availableCopies: number;
 
-  @ApiProperty({ 
-    example: 'có sẵn', 
-    description: 'Trạng thái sách (có sẵn nếu availableCopies > 0, không có sẵn nếu = 0)',
+  @ApiProperty({
+    example: 'có sẵn',
+    description:
+      'Trạng thái sách (có sẵn nếu availableCopies > 0, không có sẵn nếu = 0)',
     enum: ['có sẵn', 'không có sẵn'],
   })
   status: string;
@@ -71,11 +73,9 @@ export class BookResponseDto {
   @ApiProperty({ example: 20, description: 'Số lượt mượn' })
   borrowCount: number;
 
-  @ApiProperty({ example: '2024-01-01T00:00:00.000Z', description: 'Thời gian tạo' })
+  @ApiProperty({
+    example: '2024-01-01T00:00:00.000Z',
+    description: 'Thời gian tạo',
+  })
   createdAt: Date;
 }
-
-
-
-
-

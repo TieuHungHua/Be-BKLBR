@@ -31,11 +31,3 @@ export class CommentsQueryDto {
   @Max(100, { message: 'Limit không được vượt quá 100' })
   limit?: number = 10;
 }
-
-
-
-
-
-
-
-

@@ -25,9 +25,8 @@ export class BookService {
 
     // Nếu có file ảnh, upload lên Cloudinary
     if (coverImageFile) {
-      const uploadResult = await this.uploadImageService.uploadBookImage(
-        coverImageFile,
-      );
+      const uploadResult =
+        await this.uploadImageService.uploadBookImage(coverImageFile);
       coverImageUrl = uploadResult.secureUrl;
     }
     // Nếu không có file nhưng có URL từ DTO, dùng URL đó
@@ -86,7 +85,7 @@ export class BookService {
     // Xử lý sort
     const sortBy = query.sortBy || 'createdAt';
     const sortOrder = query.sortOrder || 'desc';
-    
+
     const orderBy: Prisma.BookOrderByWithRelationInput = {};
     if (sortBy === 'title') {
       orderBy.title = sortOrder;
@@ -109,7 +108,7 @@ export class BookService {
     const totalPages = Math.ceil(total / limit);
 
     // Thêm trường status cho mỗi sách
-    const booksWithStatus = books.map(book => ({
+    const booksWithStatus = books.map((book) => ({
       ...book,
       status: book.availableCopies > 0 ? 'có sẵn' : 'không có sẵn',
     }));
@@ -171,13 +170,27 @@ export class BookService {
       data: {
         ...(updateBookDto.title && { title: updateBookDto.title }),
         ...(updateBookDto.author && { author: updateBookDto.author }),
-        ...(updateBookDto.categories !== undefined && { categories: updateBookDto.categories }),
-        ...(updateBookDto.coverImage !== undefined && { coverImage: updateBookDto.coverImage }),
-        ...(updateBookDto.description !== undefined && { description: updateBookDto.description }),
-        ...(updateBookDto.publisher !== undefined && { publisher: updateBookDto.publisher }),
-        ...(updateBookDto.publicationYear !== undefined && { publicationYear: updateBookDto.publicationYear }),
-        ...(updateBookDto.pages !== undefined && { pages: updateBookDto.pages }),
-        ...(updateBookDto.availableCopies !== undefined && { availableCopies: updateBookDto.availableCopies }),
+        ...(updateBookDto.categories !== undefined && {
+          categories: updateBookDto.categories,
+        }),
+        ...(updateBookDto.coverImage !== undefined && {
+          coverImage: updateBookDto.coverImage,
+        }),
+        ...(updateBookDto.description !== undefined && {
+          description: updateBookDto.description,
+        }),
+        ...(updateBookDto.publisher !== undefined && {
+          publisher: updateBookDto.publisher,
+        }),
+        ...(updateBookDto.publicationYear !== undefined && {
+          publicationYear: updateBookDto.publicationYear,
+        }),
+        ...(updateBookDto.pages !== undefined && {
+          pages: updateBookDto.pages,
+        }),
+        ...(updateBookDto.availableCopies !== undefined && {
+          availableCopies: updateBookDto.availableCopies,
+        }),
       },
     });
 
@@ -217,4 +230,3 @@ export class BookService {
     });
   }
 }
-

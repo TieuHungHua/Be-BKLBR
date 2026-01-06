@@ -9,10 +9,19 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { CurrentUser, type CurrentUserType } from '../auth/decorators/current-user.decorator';
+import {
+  CurrentUser,
+  type CurrentUserType,
+} from '../auth/decorators/current-user.decorator';
 import { RoomBookingService } from './room-booking.service';
 import { BookingSearchCriteriaDto } from './dto/booking-search.dto';
 import { CancelBookingDto } from './dto/cancel-booking.dto';
@@ -69,7 +78,10 @@ export class RoomBookingAdminController {
   }
 
   private assertStaff(currentUser: CurrentUserType) {
-    if (currentUser.role !== UserRole.admin && currentUser.role !== UserRole.lecturer) {
+    if (
+      currentUser.role !== UserRole.admin &&
+      currentUser.role !== UserRole.lecturer
+    ) {
       throw new ForbiddenException('Admin or staff role required');
     }
   }

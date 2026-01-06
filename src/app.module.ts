@@ -33,4 +33,4 @@ import { MeetingRoomModule } from './meeting-room/meeting-room.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

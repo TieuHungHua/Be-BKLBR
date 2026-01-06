@@ -42,11 +42,3 @@ export class BorrowsQueryDto {
   @IsEnum(BorrowStatus, { message: 'Trạng thái không hợp lệ' })
   status?: BorrowStatus;
 }
-
-
-
-
-
-
-
-

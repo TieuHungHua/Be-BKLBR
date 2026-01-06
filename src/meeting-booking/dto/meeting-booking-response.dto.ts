@@ -19,7 +19,10 @@ class MeetingBookingUserDto {
 }
 
 export class MeetingBookingResponseDto {
-  @ApiProperty({ example: 'uuid-booking-id', description: 'Meeting booking ID' })
+  @ApiProperty({
+    example: 'uuid-booking-id',
+    description: 'Meeting booking ID',
+  })
   id: string;
 
   @ApiProperty({ type: MeetingBookingUserDto, description: 'User info' })

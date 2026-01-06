@@ -29,9 +29,18 @@ if (!envLoaded) {
 
 // Debug: Kiểm tra các biến môi trường Cloudinary
 console.log('🔍 Checking Cloudinary env vars:');
-console.log('  CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME ? '✅ Found' : '❌ Missing');
-console.log('  CLOUDINARY_API_KEY:', process.env.CLOUDINARY_API_KEY ? '✅ Found' : '❌ Missing');
-console.log('  CLOUDINARY_API_SECRET:', process.env.CLOUDINARY_API_SECRET ? '✅ Found' : '❌ Missing');
+console.log(
+  '  CLOUDINARY_CLOUD_NAME:',
+  process.env.CLOUDINARY_CLOUD_NAME ? '✅ Found' : '❌ Missing',
+);
+console.log(
+  '  CLOUDINARY_API_KEY:',
+  process.env.CLOUDINARY_API_KEY ? '✅ Found' : '❌ Missing',
+);
+console.log(
+  '  CLOUDINARY_API_SECRET:',
+  process.env.CLOUDINARY_API_SECRET ? '✅ Found' : '❌ Missing',
+);
 
 // Now import NestJS modules
 import { NestFactory } from '@nestjs/core';

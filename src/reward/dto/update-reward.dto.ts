@@ -2,13 +2,17 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsOptional, IsInt, Min, IsBoolean } from 'class-validator';
 
 export class UpdateRewardDto {
-  @ApiProperty({ example: 'Voucher 50k', description: 'Tên phần thưởng', required: false })
+  @ApiProperty({
+    example: 'Voucher 50k',
+    description: 'Tên phần thưởng',
+    required: false,
+  })
   @IsString()
   @IsOptional()
   name?: string;
 
-  @ApiProperty({ 
-    example: 'Voucher giảm giá 50.000đ', 
+  @ApiProperty({
+    example: 'Voucher giảm giá 50.000đ',
     description: 'Mô tả phần thưởng',
     required: false,
   })
@@ -16,8 +20,8 @@ export class UpdateRewardDto {
   @IsOptional()
   description?: string;
 
-  @ApiProperty({ 
-    example: 100, 
+  @ApiProperty({
+    example: 100,
     description: 'Số điểm cần để đổi',
     minimum: 1,
     required: false,
@@ -27,8 +31,8 @@ export class UpdateRewardDto {
   @IsOptional()
   costPoints?: number;
 
-  @ApiProperty({ 
-    example: 10, 
+  @ApiProperty({
+    example: 10,
     description: 'Số lượng tồn kho',
     minimum: 0,
     required: false,
@@ -38,8 +42,8 @@ export class UpdateRewardDto {
   @IsOptional()
   stock?: number;
 
-  @ApiProperty({ 
-    example: true, 
+  @ApiProperty({
+    example: true,
     description: 'Trạng thái hoạt động',
     required: false,
   })
@@ -47,11 +51,3 @@ export class UpdateRewardDto {
   @IsOptional()
   active?: boolean;
 }
-
-
-
-
-
-
-
-

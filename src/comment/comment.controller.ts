@@ -44,7 +44,10 @@ export class CommentController {
     description: 'Thêm bình luận thành công',
     type: CommentResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ hoặc đã bình luận rồi' })
+  @ApiResponse({
+    status: 400,
+    description: 'Dữ liệu không hợp lệ hoặc đã bình luận rồi',
+  })
   @ApiResponse({ status: 401, description: 'Chưa đăng nhập' })
   @ApiResponse({ status: 404, description: 'Sách không tồn tại' })
   async createComment(
@@ -59,8 +62,18 @@ export class CommentController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Lấy danh sách bình luận của sách' })
   @ApiParam({ name: 'bookId', description: 'ID của sách' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Số trang' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Số lượng mỗi trang' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Số trang',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Số lượng mỗi trang',
+  })
   @ApiResponse({
     status: 200,
     description: 'Lấy danh sách bình luận thành công',
@@ -111,7 +124,11 @@ export class CommentController {
     @Body() updateCommentDto: UpdateCommentDto,
     @CurrentUser() user: CurrentUserType,
   ) {
-    return this.commentService.updateComment(user.id, commentId, updateCommentDto);
+    return this.commentService.updateComment(
+      user.id,
+      commentId,
+      updateCommentDto,
+    );
   }
 
   @Delete(':commentId')
@@ -140,4 +157,3 @@ export class CommentController {
     return this.commentService.deleteComment(user.id, commentId);
   }
 }
-
