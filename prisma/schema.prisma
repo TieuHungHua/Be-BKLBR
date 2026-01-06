@@ -76,6 +76,8 @@ model User {
   displayName String   @map("display_name")
   avatar      String?
   classMajor  String?  @map("class_major")
+  dateOfBirth DateTime? @map("date_of_birth") // Ngày sinh
+  gender      String? // Giới tính (male, female, other)
   role        UserRole @default(student)
 
   // Counters (cached/aggregated)

@@ -20,7 +20,7 @@ export class UserResponseDto {
   @ApiProperty({ example: 'SV001', description: 'Mã sinh viên', nullable: true })
   studentId: string | null;
 
-  @ApiProperty({ example: 'CNTT', description: 'Lớp/Chuyên ngành', nullable: true })
+  @ApiProperty({ example: 'CNTT', description: 'Ngành học', nullable: true })
   classMajor: string | null;
 
   @ApiProperty({ 
@@ -29,6 +29,20 @@ export class UserResponseDto {
     nullable: true,
   })
   avatar: string | null;
+
+  @ApiProperty({ 
+    example: '2000-01-15T00:00:00.000Z', 
+    description: 'Ngày sinh',
+    nullable: true,
+  })
+  dateOfBirth: Date | null;
+
+  @ApiProperty({ 
+    example: 'male', 
+    description: 'Giới tính (male, female, other)',
+    nullable: true,
+  })
+  gender: string | null;
 
   @ApiProperty({ 
     example: 'student', 

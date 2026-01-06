@@ -79,6 +79,8 @@ export class UserService {
         studentId: true,
         classMajor: true,
         avatar: true,
+        dateOfBirth: true,
+        gender: true,
         role: true,
         totalBorrowed: true,
         totalReturned: true,
@@ -120,6 +122,8 @@ export class UserService {
           studentId: true,
           classMajor: true,
           avatar: true,
+          dateOfBirth: true,
+          gender: true,
           role: true,
           totalBorrowed: true,
           totalReturned: true,
@@ -160,6 +164,8 @@ export class UserService {
         studentId: true,
         classMajor: true,
         avatar: true,
+        dateOfBirth: true,
+        gender: true,
         role: true,
         totalBorrowed: true,
         totalReturned: true,
@@ -218,15 +224,37 @@ export class UserService {
       }
     }
 
+    // Kiểm tra email đã tồn tại chưa (nếu có cập nhật email)
+    if (updateUserDto.email) {
+      const existingUser = await this.prisma.user.findUnique({
+        where: { email: updateUserDto.email },
+      });
+      if (existingUser && existingUser.id !== id) {
+        throw new ConflictException('Email đã được sử dụng bởi người dùng khác');
+      }
+    }
+
     return this.prisma.user.update({
       where: { id },
       data: {
         ...(updateUserDto.displayName && {
           displayName: updateUserDto.displayName,
         }),
+        ...(updateUserDto.email !== undefined && {
+          email: updateUserDto.email || null,
+        }),
+        ...(updateUserDto.studentId !== undefined && {
+          studentId: updateUserDto.studentId,
+        }),
         ...(avatarUrl && { avatar: avatarUrl }),
         ...(updateUserDto.classMajor !== undefined && {
           classMajor: updateUserDto.classMajor,
+        }),
+        ...(updateUserDto.dateOfBirth && {
+          dateOfBirth: new Date(updateUserDto.dateOfBirth),
+        }),
+        ...(updateUserDto.gender !== undefined && {
+          gender: updateUserDto.gender,
         }),
         ...(updateUserDto.role !== undefined && { role: updateUserDto.role }),
       },
@@ -239,6 +267,8 @@ export class UserService {
         studentId: true,
         classMajor: true,
         avatar: true,
+        dateOfBirth: true,
+        gender: true,
         role: true,
         totalBorrowed: true,
         totalReturned: true,
@@ -285,6 +315,8 @@ export class UserService {
         studentId: true,
         classMajor: true,
         avatar: true,
+        dateOfBirth: true,
+        gender: true,
         role: true,
         totalBorrowed: true,
         totalReturned: true,

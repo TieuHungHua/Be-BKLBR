@@ -120,9 +120,28 @@ export class UserController {
           type: 'string',
           description: 'Tên hiển thị',
         },
+        email: {
+          type: 'string',
+          format: 'email',
+          description: 'Email',
+        },
+        studentId: {
+          type: 'string',
+          description: 'Mã sinh viên (cho student) hoặc mã giảng viên (cho lecturer)',
+        },
         classMajor: {
           type: 'string',
-          description: 'Lớp/Chuyên ngành',
+          description: 'Ngành học',
+        },
+        dateOfBirth: {
+          type: 'string',
+          format: 'date',
+          description: 'Ngày sinh (format: YYYY-MM-DD)',
+        },
+        gender: {
+          type: 'string',
+          enum: ['male', 'female', 'other'],
+          description: 'Giới tính',
         },
         role: {
           type: 'string',
