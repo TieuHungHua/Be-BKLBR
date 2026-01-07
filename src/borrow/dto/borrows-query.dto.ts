@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsInt, Min, Max, IsEnum } from 'class-validator';
+import { IsOptional, IsInt, Min, Max, IsEnum, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 import { BorrowStatus } from '@prisma/client';
 
@@ -41,6 +41,16 @@ export class BorrowsQueryDto {
   @IsOptional()
   @IsEnum(BorrowStatus, { message: 'Trạng thái không hợp lệ' })
   status?: BorrowStatus;
+
+  @ApiProperty({
+    example: 'Clean Code',
+    description: 'Tìm kiếm theo tên sách hoặc tác giả',
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => String)
+  @IsString()
+  search?: string;
 }
 
 

@@ -12,7 +12,7 @@ import { BorrowStatus, PointReason, EventType } from '@prisma/client';
 
 @Injectable()
 export class BorrowService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(userId: string, createBorrowDto: CreateBorrowDto) {
     // Kiểm tra book có tồn tại không
@@ -136,6 +136,26 @@ export class BorrowService {
       where.status = query.status;
     }
 
+    // Thêm search filter
+    if (query.search) {
+      where.book = {
+        OR: [
+          {
+            title: {
+              contains: query.search,
+              mode: 'insensitive',
+            },
+          },
+          {
+            author: {
+              contains: query.search,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      };
+    }
+
     const [borrows, total] = await Promise.all([
       this.prisma.borrow.findMany({
         where,
@@ -152,11 +172,13 @@ export class BorrowService {
               id: true,
               title: true,
               author: true,
+              coverImage: true,
+              availableCopies: true,
             },
           },
         },
         orderBy: {
-          borrowedAt: 'desc',
+          dueAt: 'asc', // Sắp xếp theo dueAt để hiển thị sách sắp hết hạn trước
         },
         skip,
         take: limit,
@@ -164,8 +186,25 @@ export class BorrowService {
       this.prisma.borrow.count({ where }),
     ]);
 
+    const now = new Date();
+
+    // Thêm các fields tính toán
+    const borrowsWithCalculatedFields = borrows.map((borrow) => {
+      const dueDate = new Date(borrow.dueAt);
+      const daysLeft = Math.ceil(
+        (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      const isExpired = daysLeft < 0;
+
+      return {
+        ...borrow,
+        daysLeft,
+        isExpired,
+      };
+    });
+
     return {
-      data: borrows,
+      data: borrowsWithCalculatedFields,
       pagination: {
         page,
         limit,
@@ -335,4 +374,5 @@ export class BorrowService {
       where: { id },
     });
   }
+
 }

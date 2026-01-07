@@ -15,7 +15,7 @@ export class BookService {
   constructor(
     private prisma: PrismaService,
     private uploadImageService: UploadImageService,
-  ) {}
+  ) { }
 
   async create(
     createBookDto: CreateBookDto,
@@ -55,7 +55,7 @@ export class BookService {
     };
   }
 
-  async findAll(query: BooksQueryDto) {
+  async findAll(query: BooksQueryDto, userId?: string) {
     const page = query.page || 1;
     const limit = query.limit || 10;
     const skip = (page - 1) * limit;
@@ -63,10 +63,20 @@ export class BookService {
     const where: Prisma.BookWhereInput = {};
 
     if (query.search) {
-      where.title = {
-        contains: query.search,
-        mode: 'insensitive',
-      };
+      where.OR = [
+        {
+          title: {
+            contains: query.search,
+            mode: 'insensitive',
+          },
+        },
+        {
+          author: {
+            contains: query.search,
+            mode: 'insensitive',
+          },
+        },
+      ];
     }
 
     if (query.author) {
@@ -80,6 +90,25 @@ export class BookService {
       where.categories = {
         has: query.category,
       };
+    }
+
+    // Filter status = "available" - chỉ lấy sách có sẵn và user chưa mượn
+    if (query.status === 'available') {
+      where.availableCopies = {
+        gt: 0,
+      };
+
+      // Nếu có userId, loại trừ sách mà user đã mượn
+      if (userId) {
+        where.NOT = {
+          borrows: {
+            some: {
+              userId,
+              status: 'active',
+            },
+          },
+        };
+      }
     }
 
     // Xử lý sort
@@ -107,11 +136,57 @@ export class BookService {
 
     const totalPages = Math.ceil(total / limit);
 
-    // Thêm trường status cho mỗi sách
-    const booksWithStatus = books.map((book) => ({
-      ...book,
-      status: book.availableCopies > 0 ? 'có sẵn' : 'không có sẵn',
-    }));
+    // Nếu có userId, thêm các fields isBorrowed, borrowDue, isFavorite
+    let booksWithStatus = books;
+    if (userId) {
+      // Lấy tất cả borrows và favorites của user trong một lần query
+      const [activeBorrows, favorites] = await Promise.all([
+        this.prisma.borrow.findMany({
+          where: {
+            userId,
+            bookId: { in: books.map((b) => b.id) },
+            status: 'active',
+          },
+          select: {
+            bookId: true,
+            dueAt: true,
+          },
+        }),
+        this.prisma.interaction.findMany({
+          where: {
+            userId,
+            bookId: { in: books.map((b) => b.id) },
+            type: 'like',
+          },
+          select: {
+            bookId: true,
+          },
+        }),
+      ]);
+
+      // Tạo maps để lookup nhanh
+      const borrowMap = new Map(
+        activeBorrows.map((b) => [b.bookId, b.dueAt]),
+      );
+      const favoriteSet = new Set(favorites.map((f) => f.bookId));
+
+      booksWithStatus = books.map((book) => ({
+        ...book,
+        status: book.availableCopies > 0 ? 'có sẵn' : 'không có sẵn',
+        isBorrowed: borrowMap.has(book.id),
+        borrowDue: borrowMap.get(book.id) || null,
+        isFavorite: favoriteSet.has(book.id),
+      }));
+    } else {
+      // Không có userId, chỉ thêm status
+      booksWithStatus = books.map((book) => ({
+        ...book,
+        status: book.availableCopies > 0 ? 'có sẵn' : 'không có sẵn',
+        isBorrowed: false,
+        borrowDue: null,
+        isFavorite: false,
+      }));
+    }
 
     return {
       data: booksWithStatus,
@@ -126,7 +201,7 @@ export class BookService {
     };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, userId?: string) {
     const book = await this.prisma.book.findUnique({
       where: { id },
       include: {
@@ -148,10 +223,49 @@ export class BookService {
       throw new NotFoundException('Sách không tồn tại');
     }
 
+    // Nếu có userId, check các trạng thái của user với sách này
+    let isBorrowed = false;
+    let borrowDue: Date | null = null;
+    let isFavorite = false;
+
+    if (userId) {
+      // Check isBorrowed và borrowDue
+      const activeBorrow = await this.prisma.borrow.findFirst({
+        where: {
+          userId,
+          bookId: id,
+          status: 'active',
+        },
+        select: {
+          dueAt: true,
+        },
+      });
+
+      if (activeBorrow) {
+        isBorrowed = true;
+        borrowDue = activeBorrow.dueAt;
+      }
+
+      // Check isFavorite
+      const favorite = await this.prisma.interaction.findUnique({
+        where: {
+          userId_bookId_type: {
+            userId,
+            bookId: id,
+            type: 'like',
+          },
+        },
+      });
+      isFavorite = !!favorite;
+    }
+
     // Thêm trường status
     return {
       ...book,
       status: book.availableCopies > 0 ? 'có sẵn' : 'không có sẵn',
+      isBorrowed,
+      borrowDue,
+      isFavorite,
     };
   }
 

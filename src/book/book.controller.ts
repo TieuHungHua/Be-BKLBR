@@ -31,11 +31,21 @@ import { UpdateBookDto } from './dto/update-book.dto';
 import { BooksQueryDto } from './dto/books-query.dto';
 import { BookResponseDto } from './dto/book-response.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
+import { Req } from '@nestjs/common';
+import type { Request } from 'express';
+import type { CurrentUserType } from '../auth/decorators/current-user.decorator';
+import { FavoriteService } from '../favorite/favorite.service';
+import { FavoritesQueryDto } from '../favorite/dto/favorites-query.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('books')
 @Controller('books')
 export class BookController {
-  constructor(private readonly bookService: BookService) {}
+  constructor(
+    private readonly bookService: BookService,
+    private readonly favoriteService: FavoriteService,
+  ) { }
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -118,7 +128,29 @@ export class BookController {
     return this.bookService.create(createBookDto, coverImageFile);
   }
 
+
+  @Get('favorites')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Lấy danh sách sách yêu thích của user' })
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
+  @ApiQuery({ name: 'search', required: false, type: String, description: 'Tìm kiếm theo tên sách hoặc tác giả' })
+  @ApiResponse({
+    status: 200,
+    description: 'Thành công',
+  })
+  @ApiResponse({ status: 401, description: 'Chưa đăng nhập' })
+  async getFavorites(
+    @Query() query: FavoritesQueryDto,
+    @CurrentUser() currentUser: CurrentUserType,
+  ) {
+    return this.favoriteService.getFavorites(currentUser.id, query);
+  }
+
   @Get()
+  @UseGuards(OptionalJwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Lấy danh sách sách với phân trang và tìm kiếm' })
   @ApiQuery({
@@ -137,7 +169,7 @@ export class BookController {
     name: 'search',
     required: false,
     type: String,
-    description: 'Tìm kiếm theo tên sách',
+    description: 'Tìm kiếm theo tên sách hoặc tác giả',
   })
   @ApiQuery({
     name: 'author',
@@ -189,11 +221,15 @@ export class BookController {
       },
     },
   })
-  async findAll(@Query() query: BooksQueryDto) {
-    return this.bookService.findAll(query);
+  async findAll(
+    @Query() query: BooksQueryDto,
+    @Req() req: Request & { user?: CurrentUserType },
+  ) {
+    return this.bookService.findAll(query, req.user?.id);
   }
 
   @Get(':id')
+  @UseGuards(OptionalJwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Lấy thông tin sách theo ID' })
   @ApiParam({ name: 'id', description: 'ID của sách' })
@@ -203,8 +239,11 @@ export class BookController {
     type: BookResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Sách không tồn tại' })
-  async findOne(@Param('id') id: string) {
-    return this.bookService.findOne(id);
+  async findOne(
+    @Param('id') id: string,
+    @Req() req: Request & { user?: CurrentUserType },
+  ) {
+    return this.bookService.findOne(id, req.user?.id);
   }
 
   @Patch(':id')

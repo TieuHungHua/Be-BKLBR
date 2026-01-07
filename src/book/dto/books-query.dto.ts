@@ -79,4 +79,14 @@ export class BooksQueryDto {
   @IsOptional()
   @IsString()
   sortOrder?: 'asc' | 'desc' = 'desc';
+
+  @ApiProperty({
+    example: 'available',
+    description: 'Lọc sách có sẵn (chỉ lấy sách có availableCopies > 0 và user chưa mượn)',
+    required: false,
+    enum: ['available'],
+  })
+  @IsOptional()
+  @IsString()
+  status?: 'available';
 }

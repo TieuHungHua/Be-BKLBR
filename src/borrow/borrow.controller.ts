@@ -31,7 +31,7 @@ import type { CurrentUserType } from '../auth/decorators/current-user.decorator'
 @Controller('borrows')
 @UseGuards(JwtAuthGuard)
 export class BorrowController {
-  constructor(private readonly borrowService: BorrowService) {}
+  constructor(private readonly borrowService: BorrowService) { }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -57,6 +57,7 @@ export class BorrowController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'status', required: false, enum: ['active', 'returned', 'overdue'] })
+  @ApiQuery({ name: 'search', required: false, type: String, description: 'Tìm kiếm theo tên sách hoặc tác giả' })
   @ApiResponse({
     status: 200,
     description: 'Lấy danh sách thành công',
@@ -141,6 +142,7 @@ export class BorrowController {
   ) {
     return this.borrowService.remove(id, user.id);
   }
+
 }
 
 

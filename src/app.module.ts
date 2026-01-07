@@ -12,6 +12,7 @@ import { RewardModule } from './reward/reward.module';
 import { UserModule } from './user/user.module';
 import { MeetingBookingModule } from './meeting-booking/meeting-booking.module';
 import { MeetingRoomModule } from './meeting-room/meeting-room.module';
+import { FavoriteModule } from './favorite/favorite.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { MeetingRoomModule } from './meeting-room/meeting-room.module';
     RewardModule,
     UserModule,
     MeetingRoomModule,
+    FavoriteModule,
   ],
   controllers: [AppController],
   providers: [AppService],

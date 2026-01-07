@@ -249,13 +249,38 @@ export class FavoriteService {
 
     const totalPages = Math.ceil(total / limit);
 
+    // Lấy danh sách borrows active của user để check isBorrowed
+    const bookIds = favorites.map((fav) => fav.bookId);
+    const activeBorrows = await this.prisma.borrow.findMany({
+      where: {
+        userId,
+        bookId: { in: bookIds },
+        status: 'active',
+      },
+      select: {
+        bookId: true,
+        dueAt: true,
+      },
+    });
+
+    // Tạo map để lookup nhanh
+    const borrowMap = new Map(
+      activeBorrows.map((b) => [b.bookId, b.dueAt]),
+    );
+
     return {
       data: favorites.map((fav) => ({
         id: fav.id,
         userId: fav.userId,
         bookId: fav.bookId,
         favoritedAt: fav.createdAt,
-        book: fav.book,
+        book: {
+          ...fav.book,
+          status: fav.book.availableCopies > 0 ? 'có sẵn' : 'không có sẵn',
+          isBorrowed: borrowMap.has(fav.bookId),
+          borrowDue: borrowMap.get(fav.bookId) || null,
+          isFavorite: true, // Đã là favorite rồi
+        },
       })),
       pagination: {
         page,
