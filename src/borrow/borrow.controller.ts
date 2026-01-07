@@ -22,6 +22,7 @@ import { BorrowService } from './borrow.service';
 import { CreateBorrowDto } from './dto/create-borrow.dto';
 import { BorrowsQueryDto } from './dto/borrows-query.dto';
 import { BorrowResponseDto } from './dto/borrow-response.dto';
+import { RenewBorrowDto } from './dto/renew-borrow.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { CurrentUserType } from '../auth/decorators/current-user.decorator';
@@ -122,6 +123,26 @@ export class BorrowController {
     @CurrentUser() user: CurrentUserType,
   ) {
     return this.borrowService.returnBook(id, user.id);
+  }
+
+  @Post(':id/renew')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Gia hạn thời gian mượn sách' })
+  @ApiParam({ name: 'id', description: 'ID của lịch sử mượn' })
+  @ApiResponse({
+    status: 200,
+    description: 'Gia hạn thành công',
+    type: BorrowResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Không thể gia hạn (đã trả, đã gia hạn tối đa, hoặc tổng thời gian vượt quá 30 ngày)' })
+  @ApiResponse({ status: 403, description: 'Không có quyền gia hạn sách này' })
+  @ApiResponse({ status: 404, description: 'Lịch sử mượn không tồn tại' })
+  async renew(
+    @Param('id') id: string,
+    @Body() renewDto: RenewBorrowDto,
+    @CurrentUser() user: CurrentUserType,
+  ) {
+    return this.borrowService.renew(id, user.id, renewDto);
   }
 
   @Delete(':id')

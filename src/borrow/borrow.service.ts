@@ -8,6 +8,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBorrowDto } from './dto/create-borrow.dto';
 import { BorrowsQueryDto } from './dto/borrows-query.dto';
+import { RenewBorrowDto } from './dto/renew-borrow.dto';
 import { BorrowStatus, PointReason, EventType, TicketType, TicketStatus } from '@prisma/client';
 
 @Injectable()
@@ -371,6 +372,89 @@ export class BorrowService {
     });
 
     return result;
+  }
+
+  async renew(id: string, userId: string, renewDto: RenewBorrowDto) {
+    const borrow = await this.prisma.borrow.findUnique({
+      where: { id },
+      include: {
+        book: {
+          select: {
+            id: true,
+            title: true,
+            author: true,
+          },
+        },
+      },
+    });
+
+    if (!borrow) {
+      throw new NotFoundException('Lịch sử mượn không tồn tại');
+    }
+
+    // Kiểm tra quyền
+    if (borrow.userId !== userId) {
+      throw new ForbiddenException('Bạn không có quyền gia hạn sách này');
+    }
+
+    // Kiểm tra đã trả chưa
+    if (borrow.status === BorrowStatus.returned) {
+      throw new BadRequestException('Sách đã được trả rồi, không thể gia hạn');
+    }
+
+    // Kiểm tra đã gia hạn chưa (chỉ được gia hạn 1 lần)
+    if (borrow.renewCount >= borrow.maxRenewCount) {
+      throw new BadRequestException('Bạn đã gia hạn tối đa số lần cho phép');
+    }
+
+    const now = new Date();
+    const currentDueAt = new Date(borrow.dueAt);
+
+    // Tính thời gian còn lại (từ hiện tại đến dueAt)
+    const daysRemaining = Math.ceil(
+      (currentDueAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+    );
+
+    // Kiểm tra: tổng thời gian (thời gian còn lại + số ngày gia hạn) phải < 30 ngày
+    const totalDays = daysRemaining + renewDto.days;
+    if (totalDays >= 30) {
+      throw new BadRequestException(
+        `Tổng thời gian gia hạn (${daysRemaining} ngày còn lại + ${renewDto.days} ngày gia hạn = ${totalDays} ngày) không được vượt quá 30 ngày`,
+      );
+    }
+
+    // Tính ngày hết hạn mới
+    const newDueAt = new Date(currentDueAt);
+    newDueAt.setDate(newDueAt.getDate() + renewDto.days);
+
+    // Cập nhật borrow
+    const updated = await this.prisma.borrow.update({
+      where: { id },
+      data: {
+        dueAt: newDueAt,
+        renewCount: {
+          increment: 1,
+        },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+          },
+        },
+        book: {
+          select: {
+            id: true,
+            title: true,
+            author: true,
+          },
+        },
+      },
+    });
+
+    return updated;
   }
 
   async remove(id: string, userId: string) {

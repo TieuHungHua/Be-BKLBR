@@ -152,13 +152,15 @@ model Book {
 }
 
 model Borrow {
-  id         String       @id @default(uuid())
-  userId     String       @map("user_id")
-  bookId     String       @map("book_id")
-  borrowedAt DateTime     @default(now()) @map("borrowed_at")
-  dueAt      DateTime     @map("due_at")
-  returnedAt DateTime?    @map("returned_at")
-  status     BorrowStatus @default(active)
+  id           String       @id @default(uuid())
+  userId       String       @map("user_id")
+  bookId       String       @map("book_id")
+  borrowedAt   DateTime     @default(now()) @map("borrowed_at")
+  dueAt        DateTime     @map("due_at")
+  returnedAt   DateTime?    @map("returned_at")
+  status       BorrowStatus @default(active)
+  renewCount   Int          @default(0) @map("renew_count")
+  maxRenewCount Int         @default(1) @map("max_renew_count")
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
