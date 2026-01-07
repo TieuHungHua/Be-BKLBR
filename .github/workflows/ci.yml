@@ -66,12 +66,12 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
 
-      - name: Run database migrations
+      - name: Setup database schema
         run: |
           if [ -f "prisma/schema.prisma" ]; then
-            npx prisma migrate deploy
+            npx prisma db push --accept-data-loss
           elif [ -f "backend/prisma/schema.prisma" ]; then
-            cd backend && npx prisma migrate deploy
+            cd backend && npx prisma db push --accept-data-loss
           fi
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
