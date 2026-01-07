@@ -157,6 +157,33 @@ jobs:
             exit 1
           fi
 
+      - name: Generate Prisma Client
+        run: |
+          if [ -f "prisma/schema.prisma" ]; then
+            npx prisma generate
+            # Verify Prisma Client was generated
+            if [ ! -f "node_modules/.prisma/client/index.d.ts" ]; then
+              echo "❌ Prisma Client not generated!"
+              exit 1
+            fi
+            echo "✅ Prisma Client generated successfully"
+          elif [ -f "backend/prisma/schema.prisma" ]; then
+            (
+              cd backend
+              npx prisma generate
+              # Verify Prisma Client was generated
+              if [ ! -f "node_modules/.prisma/client/index.d.ts" ]; then
+                echo "❌ Prisma Client not generated!"
+                ls -la node_modules/.prisma/ 2>/dev/null || echo "Prisma directory not found"
+                exit 1
+              fi
+              echo "✅ Prisma Client generated successfully"
+              echo "Prisma Client location: $(pwd)/node_modules/.prisma/client"
+            )
+          fi
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
       - name: Build application
         run: |
           if [ -f "package.json" ]; then
