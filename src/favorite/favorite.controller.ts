@@ -21,7 +21,6 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { CurrentUserType } from '../auth/decorators/current-user.decorator';
 import { FavoritesQueryDto } from './dto/favorites-query.dto';
-import { FavoriteResponseDto } from './dto/favorite-response.dto';
 
 @ApiTags('Favorites')
 @Controller('books')
