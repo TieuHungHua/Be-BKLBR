@@ -90,6 +90,8 @@ jobs:
               echo "Prisma Client location: $(pwd)/node_modules/.prisma/client"
             )
           fi
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
 
       - name: Run linter
         run: |
