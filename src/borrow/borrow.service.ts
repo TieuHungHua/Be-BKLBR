@@ -8,7 +8,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBorrowDto } from './dto/create-borrow.dto';
 import { BorrowsQueryDto } from './dto/borrows-query.dto';
-import { BorrowStatus, PointReason, EventType } from '@prisma/client';
+import { BorrowStatus, PointReason, EventType, TicketType, TicketStatus } from '@prisma/client';
 
 @Injectable()
 export class BorrowService {
@@ -114,6 +114,17 @@ export class BorrowService {
             borrowId: borrow.id,
             dueAt: createBorrowDto.dueAt,
           },
+        },
+      });
+
+      // Tự động tạo ticket cho yêu cầu mượn sách
+      await tx.ticket.create({
+        data: {
+          userId,
+          type: TicketType.borrow_book,
+          status: TicketStatus.pending,
+          bookId: createBorrowDto.bookId,
+          reason: `Yêu cầu mượn sách: ${book.title}`,
         },
       });
 
@@ -342,6 +353,17 @@ export class BorrowService {
             borrowId: borrow.id,
             isLate,
           },
+        },
+      });
+
+      // Tự động tạo ticket cho yêu cầu trả sách
+      await tx.ticket.create({
+        data: {
+          userId,
+          type: TicketType.return_book,
+          status: TicketStatus.pending,
+          bookId: borrow.bookId,
+          reason: `Yêu cầu trả sách: ${borrow.book.title}`,
         },
       });
 

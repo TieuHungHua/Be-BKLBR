@@ -65,20 +65,33 @@ enum RoomResourceType {
   other
 }
 
+enum TicketType {
+  borrow_book
+  return_book
+  room_booking
+  room_cancellation
+}
+
+enum TicketStatus {
+  pending
+  approved
+  rejected
+}
+
 // Models
 model User {
-  id          String   @id @default(uuid())
-  username    String   @unique
+  id          String    @id @default(uuid())
+  username    String    @unique
   password    String // Hashed password
-  email       String?  @unique
-  phone       String?  @unique
-  studentId   String?  @map("student_id") // Mã sinh viên (chỉ cho student)
-  displayName String   @map("display_name")
+  email       String?   @unique
+  phone       String?   @unique
+  studentId   String?   @map("student_id") // Mã sinh viên (chỉ cho student)
+  displayName String    @map("display_name")
   avatar      String?
-  classMajor  String?  @map("class_major")
+  classMajor  String?   @map("class_major")
   dateOfBirth DateTime? @map("date_of_birth") // Ngày sinh
   gender      String? // Giới tính (male, female, other)
-  role        UserRole @default(student)
+  role        UserRole  @default(student)
 
   // Counters (cached/aggregated)
   totalBorrowed Int @default(0) @map("total_borrowed")
@@ -100,6 +113,8 @@ model User {
   roomBookings      RoomBooking[]          @relation("RoomBookingUser")
   approvedBookings  RoomBooking[]          @relation("RoomBookingApprover")
   cancelledBookings RoomBooking[]          @relation("RoomBookingCanceller")
+  createdTickets    Ticket[]               @relation("TicketCreator")
+  reviewedTickets   Ticket[]               @relation("TicketReviewer")
 
   @@index([role])
   @@map("users")
@@ -129,6 +144,7 @@ model Book {
   interactions Interaction[]
   comments     Comment[]
   activities   Activity[]
+  tickets      Ticket[]
 
   @@index([title])
   @@index([author])
@@ -292,6 +308,7 @@ model MeetingRoom {
 
   resources RoomResource[]
   bookings  RoomBooking[]
+  tickets   Ticket[]
 
   @@index([isActive])
   @@index([name])
@@ -337,4 +354,43 @@ model RoomBooking {
   @@index([userId, startAt])
   @@index([status, startAt])
   @@map("room_bookings")
+}
+
+model Ticket {
+  id     String       @id @default(uuid())
+  userId String       @map("user_id")
+  type   TicketType
+  status TicketStatus @default(pending)
+
+  // For book tickets (borrow/return)
+  bookId String? @map("book_id")
+
+  // For room tickets (booking/cancellation)
+  roomId  String?   @map("room_id")
+  startAt DateTime? @map("start_at")
+  endAt   DateTime? @map("end_at")
+
+  // Additional info
+  reason String? // Lý do yêu cầu/hủy
+  note   String? // Ghi chú từ admin
+
+  // Review info (admin)
+  reviewedBy String?   @map("reviewed_by")
+  reviewedAt DateTime? @map("reviewed_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user     User         @relation("TicketCreator", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer User?        @relation("TicketReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  book     Book?        @relation(fields: [bookId], references: [id], onDelete: SetNull)
+  room     MeetingRoom? @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([type, status])
+  @@index([status, createdAt(sort: Desc)])
+  @@index([bookId])
+  @@index([roomId])
+  @@map("tickets")
 }

@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, RoomBookingStatus, UserRole } from '@prisma/client';
+import { Prisma, RoomBookingStatus, UserRole, TicketType, TicketStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import {
@@ -80,7 +80,7 @@ export class RoomBookingService {
     const booking = await this.prisma.$transaction(async (tx) => {
       await this.assertNoConflict(tx, dto.room_id, startAt, endAt);
 
-      return tx.roomBooking.create({
+      const createdBooking = await tx.roomBooking.create({
         data: {
           roomId: dto.room_id,
           userId: user.id,
@@ -93,6 +93,21 @@ export class RoomBookingService {
         },
         include: BOOKING_INCLUDE,
       });
+
+      // Tự động tạo ticket cho yêu cầu đặt phòng
+      await tx.ticket.create({
+        data: {
+          userId: user.id,
+          type: TicketType.room_booking,
+          status: TicketStatus.pending,
+          roomId: dto.room_id,
+          startAt,
+          endAt,
+          reason: purpose,
+        },
+      });
+
+      return createdBooking;
     });
 
     return this.formatBooking(booking);
@@ -174,15 +189,32 @@ export class RoomBookingService {
       throw new BadRequestException('Booking cannot be cancelled');
     }
 
-    const updated = await this.prisma.roomBooking.update({
-      where: { id },
-      data: {
-        status: RoomBookingStatus.cancelled,
-        cancelledBy: currentUser.id,
-        cancelledAt: new Date(),
-        cancelReason: dto.reason?.trim() || null,
-      },
-      include: BOOKING_INCLUDE,
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const updatedBooking = await tx.roomBooking.update({
+        where: { id },
+        data: {
+          status: RoomBookingStatus.cancelled,
+          cancelledBy: currentUser.id,
+          cancelledAt: new Date(),
+          cancelReason: dto.reason?.trim() || null,
+        },
+        include: BOOKING_INCLUDE,
+      });
+
+      // Tự động tạo ticket cho yêu cầu hủy phòng
+      await tx.ticket.create({
+        data: {
+          userId: booking.userId,
+          type: TicketType.room_cancellation,
+          status: TicketStatus.pending,
+          roomId: booking.roomId,
+          startAt: booking.startAt,
+          endAt: booking.endAt,
+          reason: dto.reason?.trim() || 'Hủy đặt phòng',
+        },
+      });
+
+      return updatedBooking;
     });
 
     return this.formatBooking(updated);
