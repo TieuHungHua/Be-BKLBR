@@ -56,22 +56,15 @@ jobs:
             exit 1
           fi
 
-      - name: Generate Prisma Client
-        run: |
-          if [ -f "prisma/schema.prisma" ]; then
-            npx prisma generate
-          elif [ -f "backend/prisma/schema.prisma" ]; then
-            cd backend && npx prisma generate
-          fi
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-
       - name: Setup database schema
         run: |
           if [ -f "prisma/schema.prisma" ]; then
             npx prisma db push --accept-data-loss
+            npx prisma generate
           elif [ -f "backend/prisma/schema.prisma" ]; then
-            cd backend && npx prisma db push --accept-data-loss
+            cd backend
+            npx prisma db push --accept-data-loss
+            npx prisma generate
           fi
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
