@@ -11,9 +11,20 @@ echo "🚀 Starting deployment..."
 echo "📦 Building application..."
 npm run build
 
-# Run database migrations
-echo "🗄️  Running database migrations..."
-npx prisma migrate deploy
+# Run database migrations (with check to skip if already synced)
+echo "🗄️  Checking and running database migrations..."
+if [ -f "scripts/check-migration.sh" ]; then
+  bash scripts/check-migration.sh
+else
+  # Fallback: check status first
+  MIGRATION_STATUS=$(npx prisma migrate status 2>&1)
+  if echo "$MIGRATION_STATUS" | grep -q "Database schema is up to date"; then
+    echo "✅ Database schema is already up to date. Skipping migration."
+  else
+    echo "📦 Running migrations..."
+    npx prisma migrate deploy
+  fi
+fi
 
 # Generate Prisma Client
 echo "🔧 Generating Prisma Client..."
