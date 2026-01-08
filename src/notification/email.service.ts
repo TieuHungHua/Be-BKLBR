@@ -55,7 +55,8 @@ export class EmailService implements OnModuleInit {
         displayName: string,
         bookTitle: string,
         daysUntilDue: number,
-        _borrowId: string, // Prefix với _ để tránh unused variable warning (có thể dùng sau)
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        _borrowId: string, // Reserved for future use (e.g., tracking, links)
     ): Promise<{ success: boolean; messageId?: string; error?: string }> {
         if (!this.transporter) {
             return {
@@ -71,15 +72,15 @@ export class EmailService implements OnModuleInit {
         );
 
         try {
-            const info = await this.transporter.sendMail({
+            const info: nodemailer.SentMessageInfo = await this.transporter.sendMail({
                 from: `"Thư Viện BK" <${this.configService.get<string>('SMTP_USER')}>`,
                 to,
                 subject,
                 html,
             });
 
-            // Type assertion cho nodemailer response
-            const messageId = (info as { messageId?: string }).messageId || undefined;
+            // Extract messageId from nodemailer response
+            const messageId = typeof info.messageId === 'string' ? info.messageId : undefined;
             
             this.logger.log(`✅ Email sent successfully: ${messageId || 'N/A'}`);
             return {
