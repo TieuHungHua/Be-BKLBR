@@ -74,17 +74,15 @@ export class EmailService implements OnModuleInit {
 
         try {
             const smtpUser = this.configService.get<string>('SMTP_USER') || '';
-            const info: SentMessageInfo = await this.transporter.sendMail({
+            const info = (await this.transporter.sendMail({
                 from: `"Thư Viện BK" <${smtpUser}>`,
                 to,
                 subject,
                 html,
-            });
+            })) as SentMessageInfo;
 
             // Extract messageId from nodemailer response
-            const messageId: string | undefined = typeof info.messageId === 'string'
-                ? info.messageId
-                : undefined;
+            const messageId: string | undefined = info.messageId;
 
             this.logger.log(`✅ Email sent successfully: ${messageId || 'N/A'}`);
             return {
