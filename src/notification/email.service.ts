@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import type { SentMessageInfo } from 'nodemailer';
 
 @Injectable()
 export class EmailService implements OnModuleInit {
@@ -72,7 +73,7 @@ export class EmailService implements OnModuleInit {
         );
 
         try {
-            const info: nodemailer.SentMessageInfo = await this.transporter.sendMail({
+            const info: SentMessageInfo = await this.transporter.sendMail({
                 from: `"Thư Viện BK" <${this.configService.get<string>('SMTP_USER')}>`,
                 to,
                 subject,
@@ -80,7 +81,7 @@ export class EmailService implements OnModuleInit {
             });
 
             // Extract messageId from nodemailer response
-            const messageId = typeof info.messageId === 'string' ? info.messageId : undefined;
+            const messageId = info.messageId;
             
             this.logger.log(`✅ Email sent successfully: ${messageId || 'N/A'}`);
             return {
