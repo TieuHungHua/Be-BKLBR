@@ -8,7 +8,7 @@ export class EmailService implements OnModuleInit {
     private readonly logger = new Logger(EmailService.name);
     private transporter: nodemailer.Transporter;
 
-    constructor(private configService: ConfigService) {}
+    constructor(private configService: ConfigService) { }
 
     async onModuleInit(): Promise<void> {
         try {
@@ -73,24 +73,31 @@ export class EmailService implements OnModuleInit {
         );
 
         try {
+            const smtpUser = this.configService.get<string>('SMTP_USER') || '';
             const info: SentMessageInfo = await this.transporter.sendMail({
-                from: `"Thư Viện BK" <${this.configService.get<string>('SMTP_USER')}>`,
+                from: `"Thư Viện BK" <${smtpUser}>`,
                 to,
                 subject,
                 html,
             });
 
             // Extract messageId from nodemailer response
-            const messageId = info.messageId;
-            
+            const messageId: string | undefined = typeof info.messageId === 'string'
+                ? info.messageId
+                : undefined;
+
             this.logger.log(`✅ Email sent successfully: ${messageId || 'N/A'}`);
             return {
                 success: true,
                 messageId,
             };
         } catch (error: unknown) {
-            const errorObj = error as { message?: string };
-            const errorMessage = errorObj?.message || 'Unknown error';
+            let errorMessage = 'Unknown error';
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            } else if (typeof error === 'object' && error !== null && 'message' in error) {
+                errorMessage = String((error as { message: unknown }).message);
+            }
             this.logger.error(`❌ Failed to send email: ${errorMessage}`);
             return {
                 success: false,
