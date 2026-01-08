@@ -62,8 +62,8 @@ export class EmailService implements OnModuleInit {
         displayName: string,
         bookTitle: string,
         daysUntilDue: number,
-        // reserved for future use
-        _borrowId: string,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        _borrowId: string, // reserved for future use
     ): Promise<{ success: boolean; messageId?: string; error?: string }> {
         if (!this.transporter) {
             return {
@@ -81,22 +81,24 @@ export class EmailService implements OnModuleInit {
         try {
             const smtpUser = this.configService.get<string>('SMTP_USER') ?? '';
 
-            const result = await this.transporter.sendMail({
+            // Type assertion để tránh unsafe assignment
+            const result = (await this.transporter.sendMail({
                 from: `"Thư Viện BK" <${smtpUser}>`,
                 to,
                 subject,
                 html,
-            });
+            })) as { messageId?: string | number };
 
-            // ✅ extract messageId an toàn (không unsafe-any)
-            const messageId =
-                typeof result === 'object' &&
-                    result !== null &&
-                    'messageId' in result
-                    ? String(
-                        (result as { messageId?: unknown }).messageId ?? '',
-                    )
-                    : undefined;
+            // ✅ extract messageId an toàn (không unsafe-any, không base-to-string)
+            let messageId: string | undefined;
+            if (result && typeof result === 'object' && 'messageId' in result) {
+                const msgId = result.messageId;
+                if (typeof msgId === 'string') {
+                    messageId = msgId;
+                } else if (typeof msgId === 'number') {
+                    messageId = String(msgId);
+                }
+            }
 
             this.logger.log(
                 `✅ Email sent successfully: ${messageId || 'N/A'}`,
