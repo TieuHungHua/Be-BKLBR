@@ -347,7 +347,13 @@ export class UserService {
     const currentYear = now.getFullYear();
 
     // Tính toán 5 tháng gần nhất (từ tháng hiện tại trở về trước)
-    const monthlyStats = [];
+    const monthlyStats: Array<{
+      month: number;
+      year: number;
+      borrowCount: number;
+      returnCount: number;
+      overdueCount: number;
+    }> = [];
     
     for (let i = 0; i < 5; i++) {
       let month = currentMonth - i;
