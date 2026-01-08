@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
-import { FirebaseAdminService } from './firebase-admin.service';
+import { EmailService } from './email.service';
 import { BorrowStatus, NotificationStatus } from '@prisma/client';
 
 interface OverdueBorrow {
@@ -12,8 +12,8 @@ interface OverdueBorrow {
     daysUntilDue: number;
     user: {
         id: string;
-        fcmToken: string | null;
         displayName: string;
+        email: string | null;
     };
     book: {
         id: string;
@@ -26,17 +26,18 @@ interface OverdueBorrow {
 export class NotificationService {
     private readonly logger = new Logger(NotificationService.name);
     private readonly BATCH_SIZE = 50; // Số lượng user xử lý mỗi đợt
-    private readonly MAX_RETRY = 3; // Số lần retry tối đa
+    // Các mốc thời gian nhắc nhở: 0 (đúng ngày), 1 (1 ngày trước), 2 (2 ngày trước), 3 (3 ngày trước)
+    private readonly REMINDER_DAYS = [0, 1, 2, 3];
 
     constructor(
         private prisma: PrismaService,
-        private firebaseAdmin: FirebaseAdminService,
+        private emailService: EmailService,
     ) { }
 
     /**
      * Cron job chạy lúc 8:00 sáng hàng ngày
      */
-    @Cron('28 14 * * *', {
+    @Cron('30 18 * * *', {
         name: 'daily-overdue-reminder',
         timeZone: 'Asia/Ho_Chi_Minh',
     })
@@ -56,50 +57,37 @@ export class NotificationService {
     }
 
     /**
-     * Gửi thông báo nhắc hạn trả cho các khoản mượn sắp hết hạn
+     * Tạo thông báo nhắc hạn trả cho các khoản mượn sắp hết hạn (chỉ lưu vào log)
      */
     async sendOverdueReminders(): Promise<void> {
-        if (!this.firebaseAdmin.isInitialized()) {
-            this.logger.warn(
-                'Firebase Admin SDK not initialized. Skipping notifications.',
-            );
-            return;
-        }
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const now = new Date();
+        const threeDaysLater = new Date(now);
+        threeDaysLater.setDate(threeDaysLater.getDate() + 3);
 
-        // Tính các mốc thời gian: -3 ngày, -1 ngày, và đúng ngày (0)
-        const threeDaysBefore = new Date(today);
-        threeDaysBefore.setDate(threeDaysBefore.getDate() + 3);
-
-        const oneDayBefore = new Date(today);
-        oneDayBefore.setDate(oneDayBefore.getDate() + 1);
-
-        const dueToday = new Date(today);
-        dueToday.setDate(dueToday.getDate());
-
-        // Tìm các khoản mượn sắp hết hạn ở các mốc: -3 ngày, -1 ngày, và đúng ngày
+        // Tìm các khoản mượn sắp hết hạn trong vòng 3 ngày tới
+        // Query tương đương SQL: due_at >= NOW() AND due_at < NOW() + INTERVAL '3 days'
+        // Chỉ lấy user có email để gửi email
         const overdueBorrows = await this.prisma.borrow.findMany({
             where: {
                 status: BorrowStatus.active,
+                returnedAt: null, // Đảm bảo chưa trả (tương đương returned_at IS NULL)
                 user: {
-                    isPushEnabled: true,
-                    fcmToken: {
-                        not: null,
+                    email: {
+                        not: null, // Chỉ lấy user có email
                     },
                 },
                 dueAt: {
-                    gte: today,
-                    lt: new Date(today.getTime() + 4 * 24 * 60 * 60 * 1000), // Trong vòng 4 ngày tới
+                    gte: now, // due_at >= NOW()
+                    lt: threeDaysLater, // due_at < NOW() + INTERVAL '3 days'
                 },
             },
             include: {
                 user: {
                     select: {
                         id: true,
-                        fcmToken: true,
                         displayName: true,
+                        email: true,
                     },
                 },
                 book: {
@@ -119,6 +107,8 @@ export class NotificationService {
 
         // Tính số ngày còn lại cho mỗi khoản mượn và lọc theo mốc
         const borrowsToNotify: OverdueBorrow[] = [];
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
         for (const borrow of overdueBorrows) {
             const dueDate = new Date(borrow.dueAt);
@@ -128,8 +118,8 @@ export class NotificationService {
                 (dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
             );
 
-            // Chỉ gửi thông báo ở các mốc: -3 ngày, -1 ngày, và đúng ngày (0)
-            if (daysUntilDue === 3 || daysUntilDue === 1 || daysUntilDue === 0) {
+            // Chỉ gửi thông báo ở các mốc đã cấu hình
+            if (this.REMINDER_DAYS.includes(daysUntilDue)) {
                 borrowsToNotify.push({
                     ...borrow,
                     daysUntilDue,
@@ -139,7 +129,7 @@ export class NotificationService {
 
         if (borrowsToNotify.length === 0) {
             this.logger.log(
-                'No borrows match notification criteria (-3, -1, 0 days).',
+                `No borrows match notification criteria (${this.REMINDER_DAYS.join(', ')} days).`,
             );
             return;
         }
@@ -171,18 +161,11 @@ export class NotificationService {
     }
 
     /**
-     * Gửi thông báo cho một khoản mượn cụ thể
+     * Tạo thông báo cho một khoản mượn cụ thể (lưu vào log và gửi email)
      */
     private async sendNotificationForBorrow(
         borrow: OverdueBorrow,
     ): Promise<void> {
-        if (!borrow.user.fcmToken) {
-            this.logger.warn(
-                `User ${borrow.user.id} has no FCM token. Skipping notification.`,
-            );
-            return;
-        }
-
         const { title, body } = this.getNotificationContent(borrow);
 
         // Tạo log entry
@@ -193,79 +176,73 @@ export class NotificationService {
                 title,
                 body,
                 status: NotificationStatus.pending,
-                fcmToken: borrow.user.fcmToken,
             },
         });
 
-        // Gửi notification với retry mechanism
-        let success = false;
-        let errorMessage: string | undefined;
-        let retryCount = 0;
-
-        while (retryCount < this.MAX_RETRY && !success) {
-            try {
-                const result = await this.firebaseAdmin.sendNotification(
-                    borrow.user.fcmToken,
-                    title,
-                    body,
-                    {
-                        borrowId: borrow.id,
-                        bookId: borrow.book.id,
-                        bookTitle: borrow.book.title,
-                        daysUntilDue: borrow.daysUntilDue.toString(),
-                    },
-                );
-
-                if (result.success) {
-                    success = true;
-                    await this.prisma.notificationLog.update({
-                        where: { id: logEntry.id },
-                        data: {
-                            status: NotificationStatus.sent,
-                            sentAt: new Date(),
-                            retryCount,
-                        },
-                    });
-                    this.logger.log(
-                        `✅ Notification sent to user ${borrow.user.id} for borrow ${borrow.id}`,
-                    );
-                } else {
-                    errorMessage = result.error;
-                    retryCount++;
-
-                    if (retryCount < this.MAX_RETRY) {
-                        this.logger.warn(
-                            `⚠️ Retry ${retryCount}/${this.MAX_RETRY} for user ${borrow.user.id}: ${errorMessage}`,
-                        );
-                        await this.delay(2000 * retryCount); // Exponential backoff
-                    }
-                }
-            } catch (error: unknown) {
-                const errorObj = error as { message?: string };
-                errorMessage = errorObj?.message || 'Unknown error';
-                retryCount++;
-
-                if (retryCount < this.MAX_RETRY) {
-                    this.logger.warn(
-                        `⚠️ Retry ${retryCount}/${this.MAX_RETRY} for user ${borrow.user.id}: ${errorMessage}`,
-                    );
-                    await this.delay(2000 * retryCount);
-                }
-            }
+        // Gửi email nếu user có email
+        if (!borrow.user.email) {
+            this.logger.warn(
+                `User ${borrow.user.id} has no email. Skipping email notification.`,
+            );
+            return;
         }
 
-        // Nếu vẫn thất bại sau MAX_RETRY lần
-        if (!success) {
+        if (!this.emailService.isInitialized()) {
+            this.logger.warn(
+                'Email service not initialized. Skipping email notification.',
+            );
+            return;
+        }
+
+        try {
+            this.logger.log(
+                `📧 Attempting to send email to ${borrow.user.email} for borrow ${borrow.id}...`,
+            );
+
+            const emailResult = await this.emailService.sendOverdueReminderEmail(
+                borrow.user.email,
+                borrow.user.displayName,
+                borrow.book.title,
+                borrow.daysUntilDue,
+                borrow.id,
+            );
+
+            if (emailResult.success) {
+                // Cập nhật log status thành sent
+                await this.prisma.notificationLog.update({
+                    where: { id: logEntry.id },
+                    data: {
+                        status: NotificationStatus.sent,
+                        sentAt: new Date(),
+                    },
+                });
+                this.logger.log(
+                    `✅ Email sent successfully to ${borrow.user.email} for user ${borrow.user.id} (borrow ${borrow.id})`,
+                );
+            } else {
+                // Cập nhật log status thành failed
+                await this.prisma.notificationLog.update({
+                    where: { id: logEntry.id },
+                    data: {
+                        status: NotificationStatus.failed,
+                        errorMessage: emailResult.error,
+                    },
+                });
+                this.logger.error(
+                    `❌ Failed to send email to ${borrow.user.email}: ${emailResult.error}`,
+                );
+            }
+        } catch (error: unknown) {
+            const errorObj = error as { message?: string };
             await this.prisma.notificationLog.update({
                 where: { id: logEntry.id },
                 data: {
                     status: NotificationStatus.failed,
-                    errorMessage,
-                    retryCount,
+                    errorMessage: errorObj?.message || 'Unknown error',
                 },
             });
             this.logger.error(
-                `❌ Failed to send notification to user ${borrow.user.id} after ${this.MAX_RETRY} retries: ${errorMessage}`,
+                `❌ Error sending email to ${borrow.user.email}: ${errorObj?.message || 'Unknown error'}`,
             );
         }
     }
@@ -290,6 +267,11 @@ export class NotificationService {
                 title: '📚 Nhắc nhở trả sách',
                 body: `Sách "${bookTitle}" của bạn sẽ hết hạn vào ngày mai. Vui lòng chuẩn bị trả sách!`,
             };
+        } else if (daysLeft === 2) {
+            return {
+                title: '📚 Nhắc nhở trả sách',
+                body: `Sách "${bookTitle}" của bạn sẽ hết hạn sau 2 ngày nữa. Vui lòng chuẩn bị trả sách!`,
+            };
         } else if (daysLeft === 3) {
             return {
                 title: '📚 Nhắc nhở trả sách',
@@ -297,10 +279,10 @@ export class NotificationService {
             };
         }
 
-        // Fallback (không nên xảy ra)
+        // Fallback (không nên xảy ra nếu REMINDER_DAYS được cấu hình đúng)
         return {
             title: '📚 Nhắc nhở trả sách',
-            body: `Sách "${bookTitle}" của bạn sắp hết hạn. Vui lòng trả sách đúng hạn!`,
+            body: `Sách "${bookTitle}" của bạn sắp hết hạn (còn ${daysLeft} ngày). Vui lòng trả sách đúng hạn!`,
         };
     }
 
@@ -365,23 +347,14 @@ export class NotificationService {
     }
 
     /**
-     * Test gửi notification cho user hiện tại (for testing)
+     * Test tạo notification log cho user hiện tại (for testing)
      */
     async testSendNotification(userId: string) {
-        if (!this.firebaseAdmin.isInitialized()) {
-            return {
-                success: false,
-                message: 'Firebase Admin SDK not initialized',
-            };
-        }
-
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
             select: {
                 id: true,
-                fcmToken: true,
                 displayName: true,
-                isPushEnabled: true,
             },
         });
 
@@ -392,67 +365,79 @@ export class NotificationService {
             };
         }
 
-        if (!user.fcmToken) {
-            return {
-                success: false,
-                message: 'User does not have FCM token. Please update FCM token first.',
-            };
-        }
-
-        if (!user.isPushEnabled) {
-            return {
-                success: false,
-                message: 'Push notifications are disabled for this user',
-            };
-        }
-
         const title = '🧪 Test Notification';
         const body = `Xin chào ${user.displayName}! Đây là thông báo test từ hệ thống thư viện BK.`;
 
-        const result = await this.firebaseAdmin.sendNotification(
-            user.fcmToken,
-            title,
-            body,
-            {
-                type: 'test',
+        // Tạo log vào database
+        const log = await this.prisma.notificationLog.create({
+            data: {
                 userId: user.id,
+                title,
+                body,
+                status: NotificationStatus.pending,
             },
+        });
+
+        return {
+            success: true,
+            message: 'Test notification log created successfully',
+            log,
+        };
+    }
+
+    /**
+     * Test gửi email nhắc trả hạn cho user hiện tại (for testing)
+     */
+    async testSendEmail(userId: string) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                displayName: true,
+                email: true,
+            },
+        });
+
+        if (!user) {
+            return {
+                success: false,
+                message: 'User not found',
+            };
+        }
+
+        if (!user.email) {
+            return {
+                success: false,
+                message: 'User does not have email address',
+            };
+        }
+
+        if (!this.emailService.isInitialized()) {
+            return {
+                success: false,
+                message: 'Email service not initialized. Please check SMTP configuration.',
+            };
+        }
+
+        // Test gửi email với dữ liệu mẫu
+        const result = await this.emailService.sendOverdueReminderEmail(
+            user.email,
+            user.displayName,
+            'Sách Test - Clean Code',
+            3, // 3 ngày nữa
+            'test-borrow-id',
         );
 
         if (result.success) {
-            // Log vào database
-            await this.prisma.notificationLog.create({
-                data: {
-                    userId: user.id,
-                    title,
-                    body,
-                    status: NotificationStatus.sent,
-                    fcmToken: user.fcmToken,
-                    sentAt: new Date(),
-                },
-            });
-
             return {
                 success: true,
-                message: 'Test notification sent successfully',
+                message: `Test email sent successfully to ${user.email}`,
                 messageId: result.messageId,
             };
         } else {
-            // Log lỗi vào database
-            await this.prisma.notificationLog.create({
-                data: {
-                    userId: user.id,
-                    title,
-                    body,
-                    status: NotificationStatus.failed,
-                    fcmToken: user.fcmToken,
-                    errorMessage: result.error,
-                },
-            });
-
             return {
                 success: false,
-                message: 'Failed to send test notification',
+                message: 'Failed to send test email',
                 error: result.error,
             };
         }
