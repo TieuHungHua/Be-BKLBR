@@ -13,6 +13,7 @@ import { UserModule } from './user/user.module';
 import { MeetingBookingModule } from './meeting-booking/meeting-booking.module';
 import { MeetingRoomModule } from './meeting-room/meeting-room.module';
 import { FavoriteModule } from './favorite/favorite.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { FavoriteModule } from './favorite/favorite.module';
     UserModule,
     MeetingRoomModule,
     FavoriteModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -182,3 +182,4 @@ Authorization: Bearer <token>
 - `likeCount` của sách và `totalLikes` của user sẽ tự động cập nhật
 - API `POST /books/:id/favorite` là toggle: gọi lần đầu sẽ thêm, gọi lần nữa sẽ bỏ
 
+

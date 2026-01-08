@@ -78,6 +78,12 @@ enum TicketStatus {
   rejected
 }
 
+enum NotificationStatus {
+  pending
+  sent
+  failed
+}
+
 // Models
 model User {
   id          String    @id @default(uuid())
@@ -100,6 +106,10 @@ model User {
   totalComments Int @default(0) @map("total_comments")
   activityScore Int @default(0) @map("activity_score")
 
+  // Push notification fields
+  fcmToken      String? @map("fcm_token")
+  isPushEnabled Boolean @default(true) @map("is_push_enabled")
+
   createdAt DateTime @default(now()) @map("created_at")
 
   // Relations
@@ -115,8 +125,10 @@ model User {
   cancelledBookings RoomBooking[]          @relation("RoomBookingCanceller")
   createdTickets    Ticket[]               @relation("TicketCreator")
   reviewedTickets   Ticket[]               @relation("TicketReviewer")
+  notificationLogs  NotificationLog[]
 
   @@index([role])
+  @@index([isPushEnabled])
   @@map("users")
 }
 
@@ -152,19 +164,20 @@ model Book {
 }
 
 model Borrow {
-  id           String       @id @default(uuid())
-  userId       String       @map("user_id")
-  bookId       String       @map("book_id")
-  borrowedAt   DateTime     @default(now()) @map("borrowed_at")
-  dueAt        DateTime     @map("due_at")
-  returnedAt   DateTime?    @map("returned_at")
-  status       BorrowStatus @default(active)
-  renewCount   Int          @default(0) @map("renew_count")
-  maxRenewCount Int         @default(1) @map("max_renew_count")
+  id            String       @id @default(uuid())
+  userId        String       @map("user_id")
+  bookId        String       @map("book_id")
+  borrowedAt    DateTime     @default(now()) @map("borrowed_at")
+  dueAt         DateTime     @map("due_at")
+  returnedAt    DateTime?    @map("returned_at")
+  status        BorrowStatus @default(active)
+  renewCount    Int          @default(0) @map("renew_count")
+  maxRenewCount Int          @default(1) @map("max_renew_count")
 
   // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book             Book              @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  notificationLogs NotificationLog[]
 
   @@index([userId])
   @@index([bookId])
@@ -395,4 +408,27 @@ model Ticket {
   @@index([bookId])
   @@index([roomId])
   @@map("tickets")
+}
+
+model NotificationLog {
+  id           String             @id @default(uuid())
+  userId       String             @map("user_id")
+  borrowId     String?            @map("borrow_id")
+  title        String
+  body         String
+  status       NotificationStatus @default(pending)
+  fcmToken     String?            @map("fcm_token")
+  errorMessage String?            @map("error_message")
+  retryCount   Int                @default(0) @map("retry_count")
+  sentAt       DateTime?          @map("sent_at")
+  createdAt    DateTime           @default(now()) @map("created_at")
+
+  // Relations
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  borrow Borrow? @relation(fields: [borrowId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
+  @@index([borrowId])
+  @@map("notification_logs")
 }

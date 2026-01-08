@@ -99,6 +99,7 @@ async function bootstrap() {
     .addTag('rooms', 'Meeting room endpoints')
     .addTag('bookings', 'Meeting room booking endpoints')
     .addTag('admin-bookings', 'Admin booking endpoints')
+    .addTag('notifications', 'Push notification endpoints')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
