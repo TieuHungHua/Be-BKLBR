@@ -180,4 +180,30 @@ export class NotificationController {
         const userId = req.user.role === 'admin' ? undefined : req.user.id;
         return this.notificationLogService.remove(id, userId);
     }
+
+    @Patch('logs/:id/read')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth('JWT-auth')
+    @ApiOperation({ summary: 'Đánh dấu thông báo đã đọc' })
+    @ApiResponse({ status: 200, description: 'Thông báo đã được đánh dấu đã đọc' })
+    @ApiResponse({ status: 404, description: 'Thông báo không tồn tại' })
+    async markAsRead(
+        @Param('id') id: string,
+        @Request() req: RequestWithUser,
+    ) {
+        // User chỉ đánh dấu đã đọc thông báo của chính mình (trừ admin)
+        const userId = req.user.role === 'admin' ? undefined : req.user.id;
+        return this.notificationLogService.markAsRead(id, userId);
+    }
+
+    @Patch('logs/read-all')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth('JWT-auth')
+    @ApiOperation({ summary: 'Đánh dấu tất cả thông báo đã đọc' })
+    @ApiResponse({ status: 200, description: 'Tất cả thông báo đã được đánh dấu đã đọc' })
+    async markAllAsRead(@Request() req: RequestWithUser) {
+        // User chỉ đánh dấu thông báo của chính mình
+        const userId = req.user.id;
+        return this.notificationLogService.markAllAsRead(userId);
+    }
 }

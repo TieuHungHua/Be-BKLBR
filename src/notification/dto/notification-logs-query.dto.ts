@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsEnum, IsInt, Min, IsString } from 'class-validator';
+import { IsOptional, IsEnum, IsInt, Min, IsString, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 import { NotificationStatus } from '@prisma/client';
 
@@ -55,4 +55,14 @@ export class NotificationLogsQueryDto {
   @IsString()
   @IsOptional()
   borrowId?: string;
+
+  @ApiProperty({
+    example: false,
+    description: 'Lọc theo trạng thái đã đọc (true: đã đọc, false: chưa đọc)',
+    required: false,
+  })
+  @Type(() => Boolean)
+  @IsBoolean()
+  @IsOptional()
+  isRead?: boolean;
 }

@@ -63,6 +63,10 @@ export class NotificationLogService {
             where.borrowId = query.borrowId;
         }
 
+        if (query.isRead !== undefined) {
+            where.isRead = query.isRead;
+        }
+
         const [logs, total] = await Promise.all([
             this.prisma.notificationLog.findMany({
                 where,
@@ -179,6 +183,16 @@ export class NotificationLogService {
             updateData.errorMessage = updateDto.errorMessage;
         }
 
+        if (updateDto.isRead !== undefined) {
+            updateData.isRead = updateDto.isRead;
+            // Nếu đánh dấu đã đọc, tự động set readAt
+            if (updateDto.isRead === true) {
+                updateData.readAt = new Date();
+            } else if (updateDto.isRead === false) {
+                updateData.readAt = null;
+            }
+        }
+
         return this.prisma.notificationLog.update({
             where: { id },
             data: updateData,
@@ -222,5 +236,99 @@ export class NotificationLogService {
         return this.prisma.notificationLog.delete({
             where: { id },
         });
+    }
+
+    /**
+     * Đánh dấu một thông báo đã đọc
+     */
+    async markAsRead(id: string, userId?: string) {
+        const log = await this.prisma.notificationLog.findUnique({
+            where: { id },
+        });
+
+        if (!log) {
+            throw new NotFoundException('Thông báo không tồn tại');
+        }
+
+        // Kiểm tra quyền: user chỉ có thể đánh dấu thông báo của chính mình
+        if (userId && log.userId !== userId) {
+            throw new NotFoundException('Thông báo không tồn tại');
+        }
+
+        // Nếu đã đọc rồi thì không cần update
+        if (log.isRead) {
+            return this.prisma.notificationLog.findUnique({
+                where: { id },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            username: true,
+                            displayName: true,
+                        },
+                    },
+                    borrow: {
+                        include: {
+                            book: {
+                                select: {
+                                    id: true,
+                                    title: true,
+                                    author: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            });
+        }
+
+        return this.prisma.notificationLog.update({
+            where: { id },
+            data: {
+                isRead: true,
+                readAt: new Date(),
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        displayName: true,
+                    },
+                },
+                borrow: {
+                    include: {
+                        book: {
+                            select: {
+                                id: true,
+                                title: true,
+                                author: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    /**
+     * Đánh dấu tất cả thông báo của user đã đọc
+     */
+    async markAllAsRead(userId: string) {
+        const result = await this.prisma.notificationLog.updateMany({
+            where: {
+                userId,
+                isRead: false, // Chỉ update những thông báo chưa đọc
+            },
+            data: {
+                isRead: true,
+                readAt: new Date(),
+            },
+        });
+
+        return {
+            message: 'Tất cả thông báo đã được đánh dấu đã đọc',
+            count: result.count,
+        };
     }
 }

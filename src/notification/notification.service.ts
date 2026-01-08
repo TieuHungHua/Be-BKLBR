@@ -37,7 +37,7 @@ export class NotificationService {
     /**
      * Cron job chạy lúc 8:00 sáng hàng ngày
      */
-    @Cron('36 18 * * *', {
+    @Cron('21 19 * * *', {
         name: 'daily-overdue-reminder',
         timeZone: 'Asia/Ho_Chi_Minh',
     })
