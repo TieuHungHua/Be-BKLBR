@@ -46,10 +46,11 @@ export class NotificationService {
         try {
             await this.sendOverdueReminders();
             this.logger.log('✅ Daily overdue reminder job completed successfully');
-        } catch (error) {
+        } catch (error: unknown) {
+            const errorObj = error as { message?: string; stack?: string };
             this.logger.error(
-                `❌ Daily overdue reminder job failed: ${error.message}`,
-                error.stack,
+                `❌ Daily overdue reminder job failed: ${errorObj?.message || 'Unknown error'}`,
+                errorObj?.stack,
             );
         }
     }
@@ -239,8 +240,9 @@ export class NotificationService {
                         await this.delay(2000 * retryCount); // Exponential backoff
                     }
                 }
-            } catch (error: any) {
-                errorMessage = error.message || 'Unknown error';
+            } catch (error: unknown) {
+                const errorObj = error as { message?: string };
+                errorMessage = errorObj?.message || 'Unknown error';
                 retryCount++;
 
                 if (retryCount < this.MAX_RETRY) {
@@ -329,7 +331,10 @@ export class NotificationService {
         fcmToken: string,
         isPushEnabled?: boolean,
     ) {
-        const updateData: any = {
+        const updateData: {
+            fcmToken: string;
+            isPushEnabled?: boolean;
+        } = {
             fcmToken,
         };
 

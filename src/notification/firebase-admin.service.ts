@@ -9,7 +9,7 @@ export class FirebaseAdminService implements OnModuleInit {
 
     constructor(private configService: ConfigService) { }
 
-    async onModuleInit() {
+    async onModuleInit(): Promise<void> {
         try {
             // Lấy Firebase config từ environment variables
             const projectId = this.configService.get<string>('FIREBASE_PROJECT_ID') || "bk-library-e0771";
@@ -32,17 +32,17 @@ export class FirebaseAdminService implements OnModuleInit {
 
             // Initialize Firebase Admin SDK
             if (admin.apps.length === 0) {
-                this.app = admin.initializeApp({
+                this.app = await Promise.resolve(admin.initializeApp({
                     credential: admin.credential.cert({
                         projectId,
                         clientEmail,
                         privateKey,
                     }),
                     databaseURL,
-                });
+                }));
                 this.logger.log('✅ Firebase Admin SDK initialized successfully');
             } else {
-                this.app = admin.app();
+                this.app = await Promise.resolve(admin.app());
                 this.logger.log('✅ Firebase Admin SDK already initialized');
             }
         } catch (error) {
