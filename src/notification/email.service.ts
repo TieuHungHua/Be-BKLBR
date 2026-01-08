@@ -55,7 +55,7 @@ export class EmailService implements OnModuleInit {
         displayName: string,
         bookTitle: string,
         daysUntilDue: number,
-        borrowId: string,
+        _borrowId: string, // Prefix với _ để tránh unused variable warning (có thể dùng sau)
     ): Promise<{ success: boolean; messageId?: string; error?: string }> {
         if (!this.transporter) {
             return {
@@ -78,10 +78,13 @@ export class EmailService implements OnModuleInit {
                 html,
             });
 
-            this.logger.log(`✅ Email sent successfully: ${info.messageId}`);
+            // Type assertion cho nodemailer response
+            const messageId = (info as { messageId?: string }).messageId || undefined;
+            
+            this.logger.log(`✅ Email sent successfully: ${messageId || 'N/A'}`);
             return {
                 success: true,
-                messageId: info.messageId,
+                messageId,
             };
         } catch (error: unknown) {
             const errorObj = error as { message?: string };
