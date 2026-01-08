@@ -99,20 +99,23 @@ export class FirebaseAdminService implements OnModuleInit {
                 success: true,
                 messageId: response,
             };
-        } catch (error: any) {
-            this.logger.error(`❌ Failed to send notification: ${error.message}`);
+        } catch (error: unknown) {
+            const errorObj = error as { message?: string; code?: string };
+            const errorMessage = errorObj?.message || 'Unknown error';
+
+            this.logger.error(`❌ Failed to send notification: ${errorMessage}`);
 
             // Xử lý các lỗi phổ biến
-            let errorMessage = error.message || 'Unknown error';
-            if (error.code === 'messaging/invalid-registration-token') {
-                errorMessage = 'Invalid FCM token';
-            } else if (error.code === 'messaging/registration-token-not-registered') {
-                errorMessage = 'FCM token not registered';
+            let finalErrorMessage = errorMessage;
+            if (errorObj?.code === 'messaging/invalid-registration-token') {
+                finalErrorMessage = 'Invalid FCM token';
+            } else if (errorObj?.code === 'messaging/registration-token-not-registered') {
+                finalErrorMessage = 'FCM token not registered';
             }
 
             return {
                 success: false,
-                error: errorMessage,
+                error: finalErrorMessage,
             };
         }
     }

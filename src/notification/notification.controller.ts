@@ -13,6 +13,15 @@ import { NotificationService } from './notification.service';
 import { UpdateFcmTokenDto } from './dto/update-fcm-token.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
+interface RequestWithUser extends Request {
+    user: {
+        id: string;
+        username: string;
+        displayName: string;
+        role: string;
+    };
+}
+
 @ApiTags('notifications')
 @Controller('notifications')
 export class NotificationController {
@@ -31,7 +40,7 @@ export class NotificationController {
         description: 'Unauthorized',
     })
     async updateFcmToken(
-        @Request() req: any,
+        @Request() req: RequestWithUser,
         @Body() updateFcmTokenDto: UpdateFcmTokenDto,
     ) {
         const userId = req.user.id;
@@ -54,7 +63,7 @@ export class NotificationController {
         status: 200,
         description: 'Manual reminder triggered',
     })
-    async triggerManualReminder(@Request() req: any) {
+    async triggerManualReminder() {
         // TODO: Thêm check admin role nếu cần
         return this.notificationService.triggerManualReminder();
     }
@@ -70,7 +79,7 @@ export class NotificationController {
         status: 200,
         description: 'Test notification sent',
     })
-    async testSendNotification(@Request() req: any) {
+    async testSendNotification(@Request() req: RequestWithUser) {
         return this.notificationService.testSendNotification(req.user.id);
     }
 }
