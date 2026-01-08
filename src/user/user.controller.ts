@@ -31,6 +31,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersQueryDto } from './dto/users-query.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { CurrentUserType } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('users')
 @Controller('users')
@@ -205,6 +207,59 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'Người dùng không tồn tại' })
   async remove(@Param('id') id: string) {
     return this.userService.remove(id);
+  }
+
+  @Get('stats/student')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Lấy thống kê của sinh viên: số lượng mượn/trả/quá hạn trong 5 tháng gần nhất, activity score, top 5 sách nổi bật' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lấy thống kê thành công',
+    schema: {
+      type: 'object',
+      properties: {
+        monthlyStats: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              month: { type: 'number', example: 12 },
+              year: { type: 'number', example: 2024 },
+              borrowCount: { type: 'number', example: 5 },
+              returnCount: { type: 'number', example: 4 },
+              overdueCount: { type: 'number', example: 1 },
+            },
+          },
+        },
+        activityScore: { type: 'number', example: 100 },
+        popularBooks: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              title: { type: 'string' },
+              author: { type: 'string' },
+              coverImage: { type: 'string', nullable: true },
+              borrowCount: { type: 'number' },
+              likeCount: { type: 'number' },
+              commentCount: { type: 'number' },
+              availableCopies: { type: 'number' },
+              categories: { type: 'array', items: { type: 'string' } },
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Chưa đăng nhập' })
+  @ApiResponse({ status: 404, description: 'Người dùng không tồn tại' })
+  async getStudentStats(
+    @CurrentUser() currentUser: CurrentUserType,
+  ) {
+    return this.userService.getStudentStats(currentUser.id);
   }
 }
 

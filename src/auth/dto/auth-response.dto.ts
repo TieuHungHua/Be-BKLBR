@@ -22,6 +22,41 @@ class UserDto {
     description: 'Vai trò (student, lecturer, admin)',
   })
   role: string;
+
+  @ApiProperty({
+    example: 'user@example.com',
+    description: 'Email',
+    nullable: true,
+  })
+  email: string | null;
+
+  @ApiProperty({
+    example: 'SV001',
+    description: 'Mã sinh viên',
+    nullable: true,
+  })
+  studentId: string | null;
+
+  @ApiProperty({
+    example: 'CNTT',
+    description: 'Lớp chuyên ngành',
+    nullable: true,
+  })
+  classMajor: string | null;
+
+  @ApiProperty({
+    example: '2000-01-15T00:00:00.000Z',
+    description: 'Ngày tháng năm sinh',
+    nullable: true,
+  })
+  dateOfBirth: Date | null;
+
+  @ApiProperty({
+    example: 'male',
+    description: 'Giới tính (male, female, other)',
+    nullable: true,
+  })
+  gender: string | null;
 }
 
 export class AuthResponseDto {

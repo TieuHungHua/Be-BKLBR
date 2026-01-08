@@ -90,6 +90,11 @@ export class AuthService {
         displayName: user.displayName,
         avatar: user.avatar,
         role: user.role,
+        email: user.email,
+        studentId: user.studentId,
+        classMajor: user.classMajor,
+        dateOfBirth: user.dateOfBirth,
+        gender: user.gender,
       },
     };
   }
@@ -137,6 +142,11 @@ export class AuthService {
           displayName: user.displayName,
           avatar: user.avatar,
           role: user.role,
+          email: user.email,
+          studentId: user.studentId,
+          classMajor: user.classMajor,
+          dateOfBirth: user.dateOfBirth,
+          gender: user.gender,
         },
       };
     } catch (error: unknown) {

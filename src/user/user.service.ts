@@ -327,4 +327,114 @@ export class UserService {
       },
     });
   }
+
+  async getStudentStats(userId: string) {
+    // Kiểm tra user có tồn tại không
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        activityScore: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Người dùng không tồn tại');
+    }
+
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1; // 1-12
+    const currentYear = now.getFullYear();
+
+    // Tính toán 5 tháng gần nhất (từ tháng hiện tại trở về trước)
+    const monthlyStats = [];
+    
+    for (let i = 0; i < 5; i++) {
+      let month = currentMonth - i;
+      let year = currentYear;
+      
+      // Xử lý khi tháng < 1 (lùi về năm trước)
+      while (month < 1) {
+        month += 12;
+        year -= 1;
+      }
+
+      // Tính toán thời gian bắt đầu và kết thúc của tháng
+      const startDate = new Date(year, month - 1, 1);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+      // Đếm số lượng mượn trong tháng
+      const borrowCount = await this.prisma.borrow.count({
+        where: {
+          userId,
+          borrowedAt: {
+            gte: startDate,
+            lte: endDate,
+          },
+        },
+      });
+
+      // Đếm số lượng trả trong tháng
+      const returnCount = await this.prisma.borrow.count({
+        where: {
+          userId,
+          returnedAt: {
+            gte: startDate,
+            lte: endDate,
+          },
+          status: 'returned',
+        },
+      });
+
+      // Đếm số lượng quá hạn trong tháng (sách mượn trong tháng nhưng quá hạn)
+      // Quá hạn = mượn trong tháng, chưa trả (returnedAt = null), và dueAt < thời gian hiện tại
+      const overdueCount = await this.prisma.borrow.count({
+        where: {
+          userId,
+          borrowedAt: {
+            gte: startDate,
+            lte: endDate,
+          },
+          returnedAt: null, // Chưa trả
+          dueAt: {
+            lt: now, // Đã quá hạn
+          },
+        },
+      });
+
+      monthlyStats.push({
+        month,
+        year,
+        borrowCount,
+        returnCount,
+        overdueCount,
+      });
+    }
+
+    // Lấy sách nổi bật (top 5 sách có borrowCount cao nhất)
+    const popularBooks = await this.prisma.book.findMany({
+      take: 5,
+      orderBy: {
+        borrowCount: 'desc',
+      },
+      select: {
+        id: true,
+        title: true,
+        author: true,
+        coverImage: true,
+        borrowCount: true,
+        likeCount: true,
+        commentCount: true,
+        availableCopies: true,
+        categories: true,
+      },
+    });
+
+    return {
+      monthlyStats,
+      activityScore: user.activityScore,
+      popularBooks,
+    };
+  }
 }
