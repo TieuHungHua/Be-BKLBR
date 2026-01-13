@@ -24,7 +24,6 @@ import { UpdateTicketStatusDto } from './dto/update-ticket-status.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { CurrentUserType } from '../auth/decorators/current-user.decorator';
-import { UserRole } from '@prisma/client';
 
 @ApiTags('tickets')
 @ApiBearerAuth('JWT-auth')
@@ -69,7 +68,7 @@ export class TicketController {
     return this.ticketService.findAll(
       query,
       currentUser.id,
-      currentUser.role as UserRole,
+      currentUser.role,
     );
   }
 
@@ -87,7 +86,7 @@ export class TicketController {
     @Param('id') id: string,
     @CurrentUser() currentUser: CurrentUserType,
   ) {
-    return this.ticketService.findOne(id, currentUser.id, currentUser.role as UserRole);
+    return this.ticketService.findOne(id, currentUser.id, currentUser.role);
   }
 
   @Patch(':id/status')
@@ -110,7 +109,7 @@ export class TicketController {
       id,
       updateDto,
       currentUser.id,
-      currentUser.role as UserRole,
+      currentUser.role,
     );
   }
 
@@ -129,6 +128,6 @@ export class TicketController {
     @Param('id') id: string,
     @CurrentUser() currentUser: CurrentUserType,
   ) {
-    return this.ticketService.remove(id, currentUser.id, currentUser.role as UserRole);
+    return this.ticketService.remove(id, currentUser.id, currentUser.role);
   }
 }
