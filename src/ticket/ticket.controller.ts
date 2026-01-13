@@ -24,6 +24,7 @@ import { UpdateTicketStatusDto } from './dto/update-ticket-status.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { CurrentUserType } from '../auth/decorators/current-user.decorator';
+import { UserRole } from '@prisma/client';
 
 @ApiTags('tickets')
 @ApiBearerAuth('JWT-auth')
@@ -38,9 +39,16 @@ export class TicketController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({
+    name: 'category',
+    required: false,
+    enum: ['book', 'room'],
+    description: 'Phân loại: "book" (borrow_book, return_book) hoặc "room" (room_booking, room_cancellation)',
+  })
+  @ApiQuery({
     name: 'type',
     required: false,
     enum: ['borrow_book', 'return_book', 'room_booking', 'room_cancellation'],
+    description: 'Lọc theo loại ticket cụ thể (không dùng nếu đã có category)',
   })
   @ApiQuery({
     name: 'status',
@@ -48,6 +56,7 @@ export class TicketController {
     enum: ['pending', 'approved', 'rejected'],
   })
   @ApiQuery({ name: 'userId', required: false, type: String, description: 'Chỉ admin' })
+  @ApiQuery({ name: 'search', required: false, type: String, description: 'Tìm kiếm theo mã số sinh viên' })
   @ApiResponse({
     status: 200,
     description: 'Lấy danh sách thành công',
@@ -60,7 +69,7 @@ export class TicketController {
     return this.ticketService.findAll(
       query,
       currentUser.id,
-      currentUser.role,
+      currentUser.role as UserRole,
     );
   }
 
@@ -78,7 +87,7 @@ export class TicketController {
     @Param('id') id: string,
     @CurrentUser() currentUser: CurrentUserType,
   ) {
-    return this.ticketService.findOne(id, currentUser.id, currentUser.role);
+    return this.ticketService.findOne(id, currentUser.id, currentUser.role as UserRole);
   }
 
   @Patch(':id/status')
@@ -101,7 +110,7 @@ export class TicketController {
       id,
       updateDto,
       currentUser.id,
-      currentUser.role,
+      currentUser.role as UserRole,
     );
   }
 
@@ -120,6 +129,6 @@ export class TicketController {
     @Param('id') id: string,
     @CurrentUser() currentUser: CurrentUserType,
   ) {
-    return this.ticketService.remove(id, currentUser.id, currentUser.role);
+    return this.ticketService.remove(id, currentUser.id, currentUser.role as UserRole);
   }
 }

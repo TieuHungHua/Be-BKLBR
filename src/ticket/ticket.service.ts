@@ -4,7 +4,7 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, TicketType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { TicketsQueryDto } from './dto/tickets-query.dto';
 import { UpdateTicketStatusDto } from './dto/update-ticket-status.dto';
@@ -29,12 +29,36 @@ export class TicketService {
       where.userId = query.userId;
     }
 
-    if (query.type) {
+    // Phân loại theo category: book hoặc room (ưu tiên hơn type)
+    if (query.category) {
+      if (query.category === 'book') {
+        // Lọc các ticket liên quan đến sách
+        where.type = {
+          in: [TicketType.borrow_book, TicketType.return_book],
+        };
+      } else if (query.category === 'room') {
+        // Lọc các ticket liên quan đến phòng
+        where.type = {
+          in: [TicketType.room_booking, TicketType.room_cancellation],
+        };
+      }
+    } else if (query.type) {
+      // Nếu không có category thì mới dùng type
       where.type = query.type;
     }
 
     if (query.status) {
       where.status = query.status;
+    }
+
+    // Tìm kiếm theo mã số sinh viên
+    if (query.search) {
+      where.user = {
+        studentId: {
+          contains: query.search,
+          mode: 'insensitive',
+        },
+      };
     }
 
     const [tickets, total] = await Promise.all([
@@ -46,6 +70,7 @@ export class TicketService {
               id: true,
               username: true,
               displayName: true,
+              studentId: true,
             },
           },
           reviewer: {
@@ -99,6 +124,7 @@ export class TicketService {
             id: true,
             username: true,
             displayName: true,
+            studentId: true,
           },
         },
         reviewer: {
@@ -176,6 +202,7 @@ export class TicketService {
             id: true,
             username: true,
             displayName: true,
+            studentId: true,
           },
         },
         reviewer: {

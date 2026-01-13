@@ -60,4 +60,23 @@ export class TicketsQueryDto {
   @IsOptional()
   @IsString()
   userId?: string;
+
+  @ApiProperty({
+    example: 'book',
+    description: 'Phân loại ticket: "book" (borrow_book, return_book) hoặc "room" (room_booking, room_cancellation)',
+    enum: ['book', 'room'],
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(['book', 'room'], { message: 'Category phải là "book" hoặc "room"' })
+  category?: 'book' | 'room';
+
+  @ApiProperty({
+    example: 'SV001',
+    description: 'Tìm kiếm theo mã số sinh viên',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  search?: string;
 }
